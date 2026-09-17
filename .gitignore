@@ -1,0 +1,21 @@
+# Entorno
+.env
+
+# Bitácora personal del proyecto - queda local, no se publica
+bitacora-proyecto.docx
+
+# Frontend (Angular) - se genera más adelante, dejo esto listo desde ya
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+
+# IDE (si alguna vez abres todo el monorepo desde la raíz)
+.idea/
+.vscode/
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

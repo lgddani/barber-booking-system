@@ -1,0 +1,20 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: barber-booking-db
+    environment:
+      POSTGRES_DB: ${DB_NAME:-barberbooking}
+      POSTGRES_USER: ${DB_USER:-barberbooking}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-barberbooking}
+    ports:
+      - "${DB_PORT:-5433}:5432"
+    volumes:
+      - barber_booking_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-barberbooking} -d ${DB_NAME:-barberbooking}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  barber_booking_db_data:
