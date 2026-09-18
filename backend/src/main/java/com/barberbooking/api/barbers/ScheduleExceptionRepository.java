@@ -10,4 +10,6 @@ public interface ScheduleExceptionRepository extends JpaRepository<ScheduleExcep
     List<ScheduleException> findByBarberIdOrderByDateAsc(UUID barberId);
 
     List<ScheduleException> findByBarberIdAndDateBetweenOrderByDateAsc(UUID barberId, LocalDate from, LocalDate to);
+
+    List<ScheduleException> findByBarberIdAndDate(UUID barberId, LocalDate date);
 }
