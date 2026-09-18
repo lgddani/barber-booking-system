@@ -25,4 +25,32 @@ public interface AppointmentRepository extends JpaRepository<Appointment, UUID> 
         @Param("to") Instant to,
         @Param("excludedStatuses") Collection<AppointmentStatus> excludedStatuses
     );
+
+    // Misma idea pero por cliente: para la regla "no puedes tener dos citas
+    // simultáneas", sin importar con qué barbero.
+    @Query("""
+        SELECT a FROM Appointment a
+        WHERE a.customerId = :customerId
+          AND a.status NOT IN :excludedStatuses
+          AND a.startAt < :to
+          AND a.endAt > :from
+        """)
+    List<Appointment> findActiveForCustomerInRange(
+        @Param("customerId") UUID customerId,
+        @Param("from") Instant from,
+        @Param("to") Instant to,
+        @Param("excludedStatuses") Collection<AppointmentStatus> excludedStatuses
+    );
+
+    List<Appointment> findByCustomerIdOrderByStartAtAsc(UUID customerId);
+
+    List<Appointment> findByCustomerIdAndStatusOrderByStartAtAsc(UUID customerId, AppointmentStatus status);
+
+    List<Appointment> findByBarberIdOrderByStartAtAsc(UUID barberId);
+
+    List<Appointment> findByBarberIdAndStatusOrderByStartAtAsc(UUID barberId, AppointmentStatus status);
+
+    List<Appointment> findByStatusOrderByStartAtAsc(AppointmentStatus status);
+
+    List<Appointment> findAllByOrderByStartAtAsc();
 }
