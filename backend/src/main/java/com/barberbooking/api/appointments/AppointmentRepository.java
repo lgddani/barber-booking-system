@@ -1,5 +1,6 @@
 package com.barberbooking.api.appointments;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
@@ -53,4 +54,29 @@ public interface AppointmentRepository extends JpaRepository<Appointment, UUID> 
     List<Appointment> findByStatusOrderByStartAtAsc(AppointmentStatus status);
 
     List<Appointment> findAllByOrderByStartAtAsc();
+
+    @Query("""
+        SELECT new com.barberbooking.api.appointments.StatusCount(a.status, COUNT(a))
+        FROM Appointment a
+        WHERE a.startAt >= :from AND a.startAt < :to
+        GROUP BY a.status
+        """)
+    List<StatusCount> countByStatusGroupedInRange(@Param("from") Instant from, @Param("to") Instant to);
+
+    @Query("""
+        SELECT COALESCE(SUM(a.priceAtBooking), 0) FROM Appointment a
+        WHERE a.startAt >= :from AND a.startAt < :to AND a.status = :status
+        """)
+    BigDecimal sumPriceByStatusInRange(
+        @Param("from") Instant from, @Param("to") Instant to, @Param("status") AppointmentStatus status
+    );
+
+    @Query("""
+        SELECT new com.barberbooking.api.appointments.BarberCount(a.barberId, COUNT(a))
+        FROM Appointment a
+        WHERE a.startAt >= :from AND a.startAt < :to
+        GROUP BY a.barberId
+        ORDER BY COUNT(a) DESC
+        """)
+    List<BarberCount> countByBarberInRange(@Param("from") Instant from, @Param("to") Instant to);
 }
