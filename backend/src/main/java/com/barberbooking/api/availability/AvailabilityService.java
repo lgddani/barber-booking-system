@@ -19,12 +19,10 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
-@RequiredArgsConstructor
 public class AvailabilityService {
 
     private final WorkingHoursRepository workingHoursRepository;
@@ -33,9 +31,28 @@ public class AvailabilityService {
     private final ServiceRepository serviceRepository;
     private final BarberProfileRepository barberProfileRepository;
     private final Clock clock;
+    private final int slotGranularityMinutes;
 
-    @Value("${app.booking.slot-granularity-minutes:30}")
-    private int slotGranularityMinutes;
+    // Constructor explícito (no Lombok) para que slotGranularityMinutes se
+    // pueda pasar directo en los tests unitarios, sin depender de que Spring
+    // esté levantado para resolver el @Value.
+    public AvailabilityService(
+        WorkingHoursRepository workingHoursRepository,
+        ScheduleExceptionRepository scheduleExceptionRepository,
+        AppointmentRepository appointmentRepository,
+        ServiceRepository serviceRepository,
+        BarberProfileRepository barberProfileRepository,
+        Clock clock,
+        @Value("${app.booking.slot-granularity-minutes:30}") int slotGranularityMinutes
+    ) {
+        this.workingHoursRepository = workingHoursRepository;
+        this.scheduleExceptionRepository = scheduleExceptionRepository;
+        this.appointmentRepository = appointmentRepository;
+        this.serviceRepository = serviceRepository;
+        this.barberProfileRepository = barberProfileRepository;
+        this.clock = clock;
+        this.slotGranularityMinutes = slotGranularityMinutes;
+    }
 
     public List<TimeSlot> getAvailableSlots(UUID barberId, LocalDate date, UUID serviceId) {
         if (!barberProfileRepository.existsById(barberId)) {

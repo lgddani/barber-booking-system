@@ -3,6 +3,7 @@ package com.barberbooking.api.common;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.Instant;
 import java.util.stream.Collectors;
+import org.springframework.dao.CannotAcquireLockException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -63,6 +64,14 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ApiError> handleDataIntegrityViolation(DataIntegrityViolationException ex, HttpServletRequest req) {
         return build(HttpStatus.CONFLICT, "La operación viola una restricción de datos", req);
+    }
+
+    // Bajo mucha concurrencia, Postgres a veces resuelve un choque de
+    // transacciones como deadlock en vez de como violación de constraint —
+    // para quien hace la petición, el resultado práctico es el mismo.
+    @ExceptionHandler(CannotAcquireLockException.class)
+    public ResponseEntity<ApiError> handleCannotAcquireLock(CannotAcquireLockException ex, HttpServletRequest req) {
+        return build(HttpStatus.CONFLICT, "No se pudo completar la operación por alta concurrencia, vuelve a intentar", req);
     }
 
     private ResponseEntity<ApiError> build(HttpStatus status, String message, HttpServletRequest req) {

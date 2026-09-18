@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.CannotAcquireLockException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -85,8 +86,16 @@ public class AppointmentService {
             // save(), Hibernate podría diferir el INSERT hasta el commit —
             // y para entonces ya habríamos salido del catch, dejando pasar
             // la violación del constraint como un 500 en vez de un 409.
+            //
+            // CannotAcquireLockException también se captura a propósito: con
+            // MUCHAS transacciones concurrentes peleando por el mismo rango
+            // (se vio con el test de 15 hilos), Postgres a veces resuelve el
+            // conflicto como un deadlock (SQLSTATE 40P01) en vez de una
+            // violación limpia del constraint (23P01) — son dos formas
+            // distintas de decir "perdiste la carrera", y ambas deben
+            // traducirse al mismo 409 para quien está reservando.
             appointmentRepository.saveAndFlush(appointment);
-        } catch (DataIntegrityViolationException ex) {
+        } catch (DataIntegrityViolationException | CannotAcquireLockException ex) {
             // La carrera real: dos peticiones pasaron el chequeo de arriba
             // casi al mismo tiempo, sobre el mismo horario. Postgres solo
             // deja pasar un INSERT; el otro cae aquí.
