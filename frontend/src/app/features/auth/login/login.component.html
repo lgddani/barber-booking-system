@@ -1,0 +1,40 @@
+<main class="min-h-screen flex items-center justify-center px-6">
+  <div class="max-w-sm w-full bg-surface border border-line rounded-2xl p-8">
+    <h1 class="font-display text-2xl font-semibold text-ink m-0 text-center">Bella Barba</h1>
+    <p class="text-ink-soft text-sm text-center mt-2 mb-6">Inicia sesión para reservar tu cita</p>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" class="flex flex-col gap-2">
+      <mat-form-field appearance="outline">
+        <mat-label>Email</mat-label>
+        <input matInput type="email" formControlName="email" autocomplete="email" />
+        @if (form.controls.email.invalid && form.controls.email.touched) {
+          <mat-error>Ingresa un email válido</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Contraseña</mat-label>
+        <input matInput type="password" formControlName="password" autocomplete="current-password" />
+        @if (form.controls.password.invalid && form.controls.password.touched) {
+          <mat-error>Ingresa tu contraseña</mat-error>
+        }
+      </mat-form-field>
+
+      @if (errorMessage()) {
+        <p class="text-sm text-center" style="color: var(--mat-sys-error)">{{ errorMessage() }}</p>
+      }
+
+      <button mat-flat-button type="submit" [disabled]="loading()" class="mt-2 w-full">
+        @if (loading()) {
+          <mat-spinner diameter="20" />
+        } @else {
+          Iniciar sesión
+        }
+      </button>
+    </form>
+
+    <p class="text-sm text-ink-soft text-center mt-6 mb-0">
+      ¿No tienes cuenta? <a routerLink="/register" class="text-clay font-medium">Regístrate</a>
+    </p>
+  </div>
+</main>
