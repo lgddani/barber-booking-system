@@ -1,0 +1,36 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend-ci.yml"
+  pull_request:
+    branches: [master]
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend-ci.yml"
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      # mvn verify corre TODO: los 26 tests unitarios (rapidos) mas los 17 de
+      # integracion (Testcontainers, incluye la prueba de concurrencia con 15
+      # hilos). Testcontainers levanta su propio Postgres real usando el
+      # Docker que ya viene disponible en los runners de GitHub — no hace
+      # falta declarar un servicio de Postgres aparte para el job.
+      - name: mvn verify
+        run: ./mvnw -B verify
