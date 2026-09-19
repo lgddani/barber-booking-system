@@ -1,0 +1,45 @@
+<main class="max-w-2xl mx-auto px-6 py-10">
+  <h1 class="font-display text-2xl font-semibold text-ink m-0 mb-1">Mis citas</h1>
+  <p class="text-ink-soft text-sm mb-8">Tu historial y próximas citas.</p>
+
+  @if (loading()) {
+    <div class="flex justify-center py-16">
+      <mat-spinner diameter="32" />
+    </div>
+  } @else if (appointments().length === 0) {
+    <p class="text-center text-ink-soft py-10">Todavía no tienes citas reservadas.</p>
+  } @else {
+    <div class="grid gap-3">
+      @for (appt of appointments(); track appt.id) {
+        <div class="bg-surface border border-line rounded-2xl p-4 flex items-center justify-between gap-4">
+          <div>
+            <div class="font-medium text-ink">{{ serviceNames()[appt.serviceId] ?? 'Servicio' }}</div>
+            <div class="text-sm text-ink-soft">
+              {{ barberNames()[appt.barberId] ?? 'Barbero' }} · {{ formatWhen(appt.startAt) }}
+            </div>
+          </div>
+          <div class="flex items-center gap-3 shrink-0">
+            <span
+              class="text-xs font-medium px-3 py-1 rounded-full"
+              [class.bg-clay-soft]="appt.status === 'CONFIRMED' || appt.status === 'PENDING'"
+              [class.text-clay-ink]="appt.status === 'CONFIRMED' || appt.status === 'PENDING'"
+              [class.bg-muted-bg]="appt.status !== 'CONFIRMED' && appt.status !== 'PENDING'"
+              [class.text-muted-ink]="appt.status !== 'CONFIRMED' && appt.status !== 'PENDING'"
+            >
+              {{ statusLabel(appt.status) }}
+            </span>
+            @if (canCancel(appt)) {
+              <button
+                mat-stroked-button
+                [disabled]="cancellingId() === appt.id"
+                (click)="cancel(appt)"
+              >
+                Cancelar
+              </button>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
+</main>

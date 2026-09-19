@@ -1,0 +1,183 @@
+<main class="max-w-2xl mx-auto px-6 py-10">
+  <h1 class="font-display text-2xl font-semibold text-ink m-0 mb-1">Reserva tu cita</h1>
+  <p class="text-ink-soft text-sm mb-8">Elige el servicio, el barbero y el horario que prefieras.</p>
+
+  @if (loadingCatalog()) {
+    <div class="flex justify-center py-16">
+      <mat-spinner diameter="32" />
+    </div>
+  } @else if (confirmedAppointment()) {
+    <div class="bg-surface border border-line rounded-2xl p-8 text-center">
+      <div
+        class="mx-auto mb-4 w-12 h-12 rounded-full bg-clay-soft text-clay-ink flex items-center justify-center"
+      >
+        <mat-icon>check</mat-icon>
+      </div>
+      <h2 class="font-display text-xl font-semibold text-ink m-0">¡Cita confirmada!</h2>
+      <p class="text-ink-soft mt-2">
+        {{ selectedService()?.name }} con {{ selectedBarber()?.fullName }}<br />
+        {{ formattedDate() }} a las {{ formatSlotTime(selectedTime()!) }}
+      </p>
+      <button mat-flat-button class="mt-6" (click)="startOver()">Reservar otra cita</button>
+    </div>
+  } @else {
+    <!-- Migas de pan -->
+    <div class="flex items-center gap-2 text-sm mb-6">
+      <button
+        type="button"
+        class="text-ink-soft"
+        [class.text-clay]="step() === 1"
+        [class.font-semibold]="step() === 1"
+        (click)="goBackTo(1)"
+      >
+        1. Servicio
+      </button>
+      <span class="text-line">›</span>
+      <button
+        type="button"
+        class="text-ink-soft"
+        [class.text-clay]="step() === 2"
+        [class.font-semibold]="step() === 2"
+        [disabled]="!selectedService()"
+        (click)="selectedService() && goBackTo(2)"
+      >
+        2. Barbero
+      </button>
+      <span class="text-line">›</span>
+      <button
+        type="button"
+        class="text-ink-soft"
+        [class.text-clay]="step() === 3"
+        [class.font-semibold]="step() === 3"
+        [disabled]="!selectedBarber()"
+        (click)="selectedBarber() && goBackTo(3)"
+      >
+        3. Horario
+      </button>
+    </div>
+
+    @if (step() === 1) {
+      <div class="grid gap-3">
+        @for (service of services(); track service.id) {
+          <button
+            type="button"
+            class="text-left bg-surface border border-line rounded-2xl p-4 flex items-center justify-between hover:border-clay transition-colors"
+            (click)="pickService(service)"
+          >
+            <div>
+              <div class="font-medium text-ink">{{ service.name }}</div>
+              <div class="text-sm text-ink-soft">{{ service.durationMinutes }} min</div>
+            </div>
+            <div class="font-semibold text-clay">${{ service.price }}</div>
+          </button>
+        }
+      </div>
+    }
+
+    @if (step() === 2) {
+      <div class="grid gap-3">
+        @for (barber of barbers(); track barber.id) {
+          <button
+            type="button"
+            class="text-left bg-surface border border-line rounded-2xl p-4 flex items-center gap-3 hover:border-clay transition-colors"
+            (click)="pickBarber(barber)"
+          >
+            <div
+              class="w-10 h-10 rounded-full bg-clay-soft text-clay-ink flex items-center justify-center font-semibold text-sm shrink-0"
+            >
+              {{ barber.fullName.charAt(0) }}
+            </div>
+            <div>
+              <div class="font-medium text-ink">{{ barber.fullName }}</div>
+              @if (barber.bio) {
+                <div class="text-sm text-ink-soft">{{ barber.bio }}</div>
+              }
+            </div>
+          </button>
+        }
+      </div>
+    }
+
+    @if (step() === 3) {
+      <div class="flex items-center justify-between mb-4">
+        <button mat-icon-button [disabled]="!canGoPrevDay()" (click)="shiftDate(-1)" aria-label="Día anterior">
+          <mat-icon>chevron_left</mat-icon>
+        </button>
+        <span class="font-medium text-ink">{{ formattedDate() }}</span>
+        <button mat-icon-button (click)="shiftDate(1)" aria-label="Día siguiente">
+          <mat-icon>chevron_right</mat-icon>
+        </button>
+      </div>
+
+      @if (loadingSlots()) {
+        <div class="flex justify-center py-10">
+          <mat-spinner diameter="28" />
+        </div>
+      } @else if (slots().length === 0) {
+        <p class="text-center text-ink-soft py-10">Sin horarios disponibles este día.</p>
+      } @else {
+        <div class="grid grid-cols-4 gap-2">
+          @for (slot of slots(); track slot.time) {
+            <button
+              type="button"
+              class="rounded-lg py-2.5 text-sm border transition-colors"
+              [class.bg-clay]="slot.available && selectedTime() === slot.time"
+              [class.text-clay-on]="slot.available && selectedTime() === slot.time"
+              [class.border-clay]="slot.available && selectedTime() === slot.time"
+              [class.bg-surface]="slot.available && selectedTime() !== slot.time"
+              [class.border-line]="slot.available && selectedTime() !== slot.time"
+              [class.text-ink]="slot.available && selectedTime() !== slot.time"
+              [class.bg-muted-bg]="!slot.available"
+              [class.text-muted-ink]="!slot.available"
+              [class.border-muted-bg]="!slot.available"
+              [disabled]="!slot.available"
+              (click)="pickSlot(slot)"
+            >
+              {{ formatSlotTime(slot.time) }}
+            </button>
+          }
+        </div>
+      }
+    }
+
+    @if (step() === 4) {
+      <div class="bg-surface border border-line rounded-2xl p-6">
+        <h2 class="font-display text-lg font-semibold text-ink m-0 mb-4">Confirma tu cita</h2>
+        <dl class="text-sm space-y-2 mb-6">
+          <div class="flex justify-between">
+            <dt class="text-ink-soft">Servicio</dt>
+            <dd class="text-ink font-medium m-0">{{ selectedService()?.name }}</dd>
+          </div>
+          <div class="flex justify-between">
+            <dt class="text-ink-soft">Barbero</dt>
+            <dd class="text-ink font-medium m-0">{{ selectedBarber()?.fullName }}</dd>
+          </div>
+          <div class="flex justify-between">
+            <dt class="text-ink-soft">Fecha</dt>
+            <dd class="text-ink font-medium m-0">{{ formattedDate() }}</dd>
+          </div>
+          <div class="flex justify-between">
+            <dt class="text-ink-soft">Hora</dt>
+            <dd class="text-ink font-medium m-0">{{ formatSlotTime(selectedTime()!) }}</dd>
+          </div>
+          <div class="flex justify-between">
+            <dt class="text-ink-soft">Precio</dt>
+            <dd class="text-clay font-semibold m-0">${{ selectedService()?.price }}</dd>
+          </div>
+        </dl>
+
+        @if (errorMessage()) {
+          <p class="text-sm mb-4" style="color: var(--mat-sys-error)">{{ errorMessage() }}</p>
+        }
+
+        <button mat-flat-button class="w-full" [disabled]="submitting()" (click)="confirm()">
+          @if (submitting()) {
+            <mat-spinner diameter="20" />
+          } @else {
+            Confirmar reserva
+          }
+        </button>
+      </div>
+    }
+  }
+</main>

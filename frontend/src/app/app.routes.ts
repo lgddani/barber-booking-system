@@ -16,7 +16,21 @@ export const routes: Routes = [
     path: 'cliente',
     canActivate: [roleGuard(['CUSTOMER'])],
     loadComponent: () =>
-      import('./features/customer/customer-home.component').then((m) => m.CustomerHomeComponent)
+      import('./features/customer/customer-shell.component').then((m) => m.CustomerShellComponent),
+    children: [
+      { path: '', pathMatch: 'full', redirectTo: 'reservar' },
+      {
+        path: 'reservar',
+        loadComponent: () => import('./features/customer/booking/booking.component').then((m) => m.BookingComponent)
+      },
+      {
+        path: 'mis-citas',
+        loadComponent: () =>
+          import('./features/customer/my-appointments/my-appointments.component').then(
+            (m) => m.MyAppointmentsComponent
+          )
+      }
+    ]
   },
   {
     path: 'barbero',
