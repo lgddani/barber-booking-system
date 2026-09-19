@@ -1,73 +1,28 @@
-<main class="max-w-3xl mx-auto px-6 py-10">
+<main class="max-w-5xl mx-auto px-6 py-10">
   <h1 class="font-display text-2xl font-semibold text-ink m-0 mb-1">Barberos</h1>
-  <p class="text-ink-soft text-sm mb-8">El equipo que atiende las citas.</p>
+  <p class="text-ink-soft text-sm mb-6">El equipo que atiende las citas.</p>
 
-  <div class="bg-surface border border-line rounded-2xl p-5 mb-6">
-    <h2 class="font-display text-base font-semibold text-ink m-0 mb-3">
-      {{ isEditing() ? 'Editar barbero' : 'Nuevo barbero' }}
-    </h2>
-
-    <div class="grid gap-3">
-      @if (!isEditing()) {
-        <input
-          type="email"
-          placeholder="Correo"
-          [value]="email()"
-          #emailInput
-          (input)="email.set(emailInput.value)"
-          class="border border-line rounded-lg px-3 py-2 text-sm text-ink bg-transparent"
-        />
-        <input
-          type="password"
-          placeholder="Contraseña (mínimo 8 caracteres)"
-          [value]="password()"
-          #passwordInput
-          (input)="password.set(passwordInput.value)"
-          class="border border-line rounded-lg px-3 py-2 text-sm text-ink bg-transparent"
-        />
-      }
+  <div class="flex items-center justify-between gap-4 mb-5">
+    <div class="relative flex-1 max-w-xs">
+      <mat-icon
+        class="absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted pointer-events-none"
+        style="font-size: 20px; width: 20px; height: 20px;"
+      >
+        search
+      </mat-icon>
       <input
         type="text"
-        placeholder="Nombre completo"
-        [value]="fullName()"
-        #fullNameInput
-        (input)="fullName.set(fullNameInput.value)"
-        class="border border-line rounded-lg px-3 py-2 text-sm text-ink bg-transparent"
+        placeholder="Buscar barbero..."
+        [value]="searchTerm()"
+        #searchInput
+        (input)="setSearchTerm(searchInput.value)"
+        class="w-full border border-line rounded-lg pl-10 pr-3 py-2 text-sm text-ink bg-surface focus:outline-none focus:ring-2 focus:border-clay focus:ring-clay/20 transition duration-200 ease-out"
       />
-      <input
-        type="tel"
-        placeholder="Teléfono (opcional)"
-        [value]="phone()"
-        #phoneInput
-        (input)="phone.set(phoneInput.value)"
-        class="border border-line rounded-lg px-3 py-2 text-sm text-ink bg-transparent"
-      />
-      <input
-        type="text"
-        placeholder="Bio (opcional)"
-        [value]="bio()"
-        #bioInput
-        (input)="bio.set(bioInput.value)"
-        class="border border-line rounded-lg px-3 py-2 text-sm text-ink bg-transparent"
-      />
-
-      @if (errorMessage()) {
-        <p class="text-sm m-0" style="color: var(--mat-sys-error)">{{ errorMessage() }}</p>
-      }
-
-      <div class="flex items-center gap-2">
-        <button mat-flat-button [disabled]="submitting()" (click)="save()">
-          @if (submitting()) {
-            <mat-spinner diameter="20" />
-          } @else {
-            {{ isEditing() ? 'Guardar cambios' : 'Crear barbero' }}
-          }
-        </button>
-        @if (isEditing()) {
-          <button mat-button type="button" (click)="startCreate()">Cancelar edición</button>
-        }
-      </div>
     </div>
+    <button mat-flat-button (click)="openCreateModal()">
+      <mat-icon style="vertical-align: middle;">add</mat-icon>
+      Nuevo barbero
+    </button>
   </div>
 
   @if (loading()) {
@@ -75,34 +30,190 @@
       <mat-spinner diameter="32" />
     </div>
   } @else {
-    <div class="grid gap-3">
-      @for (barber of barbers(); track barber.id) {
-        <div class="bg-surface border border-line rounded-2xl p-4 flex items-center justify-between gap-4">
-          <div>
-            <div class="font-medium text-ink">{{ barber.fullName }}</div>
-            @if (barber.bio) {
-              <div class="text-sm text-ink-soft">{{ barber.bio }}</div>
-            }
-          </div>
-          <div class="flex items-center flex-wrap justify-end gap-2 shrink-0">
-            <span
-              class="text-xs font-medium px-3 py-1 rounded-full"
-              [class.bg-clay-soft]="barber.active"
-              [class.text-clay-ink]="barber.active"
-              [class.bg-muted-bg]="!barber.active"
-              [class.text-muted-ink]="!barber.active"
-            >
-              {{ barber.active ? 'Activo' : 'Inactivo' }}
-            </span>
-            <button mat-stroked-button (click)="startEdit(barber)">Editar</button>
-            <a [routerLink]="['/admin/barberos', barber.id, 'horarios']" mat-stroked-button>Horario</a>
-            <a [routerLink]="['/admin/barberos', barber.id, 'bloqueos']" mat-stroked-button>Bloqueos</a>
-            <button mat-stroked-button [disabled]="togglingId() === barber.id" (click)="toggleActive(barber)">
-              {{ barber.active ? 'Desactivar' : 'Activar' }}
-            </button>
-          </div>
-        </div>
-      }
+    <div class="bg-surface border border-line rounded-2xl overflow-hidden overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-line text-left text-ink-soft">
+            <th class="font-medium px-4 py-3">Nombre</th>
+            <th class="font-medium px-4 py-3">Teléfono</th>
+            <th class="font-medium px-4 py-3">Bio</th>
+            <th class="font-medium px-4 py-3">Estado</th>
+            <th class="font-medium px-4 py-3 text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (barber of pagedBarbers(); track barber.id) {
+            <tr class="border-b border-line last:border-0">
+              <td class="px-4 py-3">
+                <div class="flex items-center gap-3">
+                  <div
+                    class="w-9 h-9 rounded-full bg-clay-soft text-clay-ink flex items-center justify-center text-sm font-semibold shrink-0"
+                  >
+                    {{ barber.fullName.charAt(0) }}
+                  </div>
+                  <span class="font-medium text-ink">{{ barber.fullName }}</span>
+                </div>
+              </td>
+              <td class="px-4 py-3 text-ink-soft whitespace-nowrap">{{ barber.phone || '—' }}</td>
+              <td class="px-4 py-3 text-ink-soft max-w-xs truncate">{{ barber.bio || '—' }}</td>
+              <td class="px-4 py-3">
+                <span
+                  class="text-xs font-medium px-3 py-1 rounded-full"
+                  [class.bg-clay-soft]="barber.active"
+                  [class.text-clay-ink]="barber.active"
+                  [class.bg-muted-bg]="!barber.active"
+                  [class.text-muted-ink]="!barber.active"
+                >
+                  {{ barber.active ? 'Activo' : 'Inactivo' }}
+                </span>
+              </td>
+              <td class="px-4 py-3">
+                <div class="flex justify-end items-center gap-1">
+                  <button mat-icon-button (click)="openEditModal(barber)" aria-label="Editar barbero">
+                    <mat-icon style="font-size: 18px; width: 18px; height: 18px;">edit</mat-icon>
+                  </button>
+                  <a [routerLink]="['/admin/barberos', barber.id, 'horarios']" mat-icon-button aria-label="Horario">
+                    <mat-icon style="font-size: 18px; width: 18px; height: 18px;">schedule</mat-icon>
+                  </a>
+                  <a [routerLink]="['/admin/barberos', barber.id, 'bloqueos']" mat-icon-button aria-label="Bloqueos">
+                    <mat-icon style="font-size: 18px; width: 18px; height: 18px;">event_busy</mat-icon>
+                  </a>
+                  <button
+                    mat-icon-button
+                    [disabled]="togglingId() === barber.id"
+                    (click)="toggleActive(barber)"
+                    [attr.aria-label]="barber.active ? 'Desactivar barbero' : 'Activar barbero'"
+                  >
+                    <mat-icon style="font-size: 18px; width: 18px; height: 18px;">
+                      {{ barber.active ? 'block' : 'check_circle' }}
+                    </mat-icon>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="5" class="px-4 py-10 text-center text-ink-soft">No se encontraron barberos.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="flex items-center justify-between mt-4 text-sm text-ink-soft">
+      <span>Mostrando {{ rangeStart() }}-{{ rangeEnd() }} de {{ filteredBarbers().length }} barberos</span>
+      <div class="flex items-center gap-2">
+        <button mat-icon-button [disabled]="currentPage() === 1" (click)="prevPage()" aria-label="Página anterior">
+          <mat-icon>chevron_left</mat-icon>
+        </button>
+        <span class="w-8 h-8 rounded-lg bg-clay text-clay-on flex items-center justify-center font-medium">
+          {{ currentPage() }}
+        </span>
+        <button
+          mat-icon-button
+          [disabled]="currentPage() === totalPages()"
+          (click)="nextPage()"
+          aria-label="Página siguiente"
+        >
+          <mat-icon>chevron_right</mat-icon>
+        </button>
+      </div>
     </div>
   }
 </main>
+
+@if (modalOpen()) {
+  <div class="fixed inset-0 bg-ink/40 flex items-center justify-center z-30 px-4" (click)="closeModal()">
+    <div class="bg-surface rounded-2xl p-6 max-w-md w-full" (click)="$event.stopPropagation()">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="font-display text-lg font-semibold text-ink m-0">
+          {{ isEditing() ? 'Editar barbero' : 'Nuevo barbero' }}
+        </h2>
+        <button mat-icon-button (click)="closeModal()" aria-label="Cerrar">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <div class="grid gap-3">
+        @if (!isEditing()) {
+          <div class="flex flex-col gap-1.5">
+            <label class="text-sm font-medium text-ink">Correo</label>
+            <input
+              type="email"
+              [value]="email()"
+              #emailInput
+              (input)="email.set(emailInput.value)"
+              class="border border-line rounded-lg px-3 py-2 text-sm text-ink bg-transparent focus:outline-none focus:ring-2 focus:border-clay focus:ring-clay/20 transition duration-200 ease-out"
+            />
+          </div>
+          <div class="flex flex-col gap-1.5">
+            <label class="text-sm font-medium text-ink">Contraseña</label>
+            <input
+              type="password"
+              [value]="password()"
+              #passwordInput
+              (input)="password.set(passwordInput.value)"
+              class="border border-line rounded-lg px-3 py-2 text-sm text-ink bg-transparent focus:outline-none focus:ring-2 focus:border-clay focus:ring-clay/20 transition duration-200 ease-out"
+            />
+          </div>
+        }
+        <div class="flex flex-col gap-1.5">
+          <label class="text-sm font-medium text-ink">Nombre completo</label>
+          <input
+            type="text"
+            [value]="fullName()"
+            #fullNameInput
+            (input)="fullName.set(fullNameInput.value)"
+            class="border border-line rounded-lg px-3 py-2 text-sm text-ink bg-transparent focus:outline-none focus:ring-2 focus:border-clay focus:ring-clay/20 transition duration-200 ease-out"
+          />
+        </div>
+        <div class="flex flex-col gap-1.5">
+          <label class="text-sm font-medium text-ink">
+            Teléfono <span class="text-ink-muted font-normal">(opcional)</span>
+          </label>
+          <input
+            type="tel"
+            [value]="phone()"
+            #phoneInput
+            (input)="phone.set(phoneInput.value)"
+            class="border border-line rounded-lg px-3 py-2 text-sm text-ink bg-transparent focus:outline-none focus:ring-2 focus:border-clay focus:ring-clay/20 transition duration-200 ease-out"
+          />
+        </div>
+        <div class="flex flex-col gap-1.5">
+          <label class="text-sm font-medium text-ink">Bio <span class="text-ink-muted font-normal">(opcional)</span></label>
+          <textarea
+            rows="2"
+            [value]="bio()"
+            #bioInput
+            (input)="bio.set(bioInput.value)"
+            class="border border-line rounded-lg px-3 py-2 text-sm text-ink bg-transparent focus:outline-none focus:ring-2 focus:border-clay focus:ring-clay/20 transition duration-200 ease-out resize-none"
+          ></textarea>
+        </div>
+
+        @if (isEditing()) {
+          <div class="flex items-center justify-between pt-1">
+            <label class="text-sm font-medium text-ink">Estado</label>
+            <mat-slide-toggle [checked]="activeToggle()" (change)="activeToggle.set($event.checked)">
+              {{ activeToggle() ? 'Activo' : 'Inactivo' }}
+            </mat-slide-toggle>
+          </div>
+        }
+
+        @if (errorMessage()) {
+          <p class="text-sm text-error m-0">{{ errorMessage() }}</p>
+        }
+
+        <div class="flex items-center gap-2 pt-2">
+          <button mat-flat-button class="flex-1" [disabled]="submitting()" (click)="save()">
+            @if (submitting()) {
+              <mat-spinner diameter="20" />
+            } @else {
+              Guardar
+            }
+          </button>
+          <button mat-stroked-button class="flex-1" type="button" (click)="closeModal()">Cancelar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
