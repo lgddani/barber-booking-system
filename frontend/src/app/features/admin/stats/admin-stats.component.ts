@@ -1,5 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AdminStatsApiService } from '../../../core/api/admin-stats-api.service';
 import { AdminStats } from '../../../core/models/admin-stats.model';
@@ -16,7 +17,7 @@ const STATUS_LABEL: Record<AppointmentStatus, string> = {
 @Component({
   selector: 'app-admin-stats',
   standalone: true,
-  imports: [MatButtonModule, MatProgressSpinnerModule],
+  imports: [MatButtonModule, MatIconModule, MatProgressSpinnerModule],
   templateUrl: './admin-stats.component.html'
 })
 export class AdminStatsComponent {
@@ -57,5 +58,10 @@ export class AdminStatsComponent {
       label: this.statusLabel(status),
       count: count ?? 0
     }));
+  }
+
+  statusPercent(count: number): number {
+    const total = this.stats()?.totalAppointments ?? 0;
+    return total === 0 ? 0 : Math.round((count / total) * 100);
   }
 }

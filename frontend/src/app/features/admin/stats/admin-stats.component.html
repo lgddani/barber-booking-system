@@ -1,67 +1,90 @@
-<main class="max-w-2xl mx-auto px-6 py-10">
+<main class="max-w-5xl mx-auto px-6 py-10">
   <h1 class="font-display text-2xl font-semibold text-ink m-0 mb-1">Estadísticas</h1>
-  <p class="text-ink-soft text-sm mb-8">Resumen del negocio en un rango de fechas.</p>
+  <p class="text-ink-soft text-sm mb-6">Resumen del negocio en un rango de fechas.</p>
 
   <div class="flex items-end gap-3 mb-6">
-    <div>
-      <label class="block text-sm text-ink-soft mb-1">Desde</label>
+    <div class="flex flex-col gap-1.5">
+      <label class="text-sm font-medium text-ink">Desde</label>
       <input
         type="date"
         [value]="fromInput()"
         #fromInputEl
         (change)="fromInput.set(fromInputEl.value)"
-        class="border border-line rounded-lg px-3 py-2 text-sm text-ink bg-transparent"
+        class="border border-line rounded-lg px-3 py-2 text-sm text-ink bg-surface focus:outline-none focus:ring-2 focus:border-clay focus:ring-clay/20 transition duration-200 ease-out"
       />
     </div>
-    <div>
-      <label class="block text-sm text-ink-soft mb-1">Hasta</label>
+    <div class="flex flex-col gap-1.5">
+      <label class="text-sm font-medium text-ink">Hasta</label>
       <input
         type="date"
         [value]="toInput()"
         #toInputEl
         (change)="toInput.set(toInputEl.value)"
-        class="border border-line rounded-lg px-3 py-2 text-sm text-ink bg-transparent"
+        class="border border-line rounded-lg px-3 py-2 text-sm text-ink bg-surface focus:outline-none focus:ring-2 focus:border-clay focus:ring-clay/20 transition duration-200 ease-out"
       />
     </div>
-    <button mat-stroked-button (click)="load()">Aplicar</button>
+    <button mat-flat-button (click)="load()">Aplicar</button>
   </div>
 
   @if (stats(); as s) {
-    <div class="grid gap-3">
-      <div class="bg-surface border border-line rounded-2xl p-5">
-        <div class="text-sm text-ink-soft mb-1">Total de citas</div>
-        <div class="font-display text-3xl font-semibold text-ink">{{ s.totalAppointments }}</div>
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+      <div class="bg-surface border border-line rounded-2xl p-5 flex items-center gap-4">
+        <div class="w-11 h-11 rounded-full bg-clay-soft text-clay-ink flex items-center justify-center shrink-0">
+          <mat-icon>event</mat-icon>
+        </div>
+        <div>
+          <div class="text-sm text-ink-soft">Total de citas</div>
+          <div class="font-display text-2xl font-semibold text-ink">{{ s.totalAppointments }}</div>
+        </div>
       </div>
 
-      <div class="bg-surface border border-line rounded-2xl p-5">
-        <div class="text-sm text-ink-soft mb-1">Ingresos (citas completadas)</div>
-        <div class="font-display text-3xl font-semibold text-clay">${{ s.estimatedRevenue }}</div>
+      <div class="bg-surface border border-line rounded-2xl p-5 flex items-center gap-4">
+        <div class="w-11 h-11 rounded-full bg-clay-soft text-clay-ink flex items-center justify-center shrink-0">
+          <mat-icon>payments</mat-icon>
+        </div>
+        <div>
+          <div class="text-sm text-ink-soft">Ingresos (completadas)</div>
+          <div class="font-display text-2xl font-semibold text-clay">${{ s.estimatedRevenue }}</div>
+        </div>
       </div>
 
-      <div class="bg-surface border border-line rounded-2xl p-5">
-        <div class="text-sm text-ink-soft mb-3">Por estado</div>
-        @if (statusRows().length === 0) {
-          <p class="text-sm text-ink-soft m-0">Sin citas en este rango.</p>
-        } @else {
-          <dl class="text-sm space-y-2 m-0">
-            @for (row of statusRows(); track row.status) {
-              <div class="flex justify-between">
-                <dt class="text-ink-soft">{{ row.label }}</dt>
-                <dd class="text-ink font-medium m-0">{{ row.count }}</dd>
+      <div class="bg-surface border border-line rounded-2xl p-5 flex items-center gap-4">
+        <div class="w-11 h-11 rounded-full bg-clay-soft text-clay-ink flex items-center justify-center shrink-0">
+          <mat-icon>emoji_events</mat-icon>
+        </div>
+        <div>
+          <div class="text-sm text-ink-soft">Barbero con más citas</div>
+          @if (s.busiestBarber; as b) {
+            <div class="font-medium text-ink truncate">{{ b.fullName }} · {{ b.appointmentCount }}</div>
+          } @else {
+            <div class="text-sm text-ink-soft">Sin datos</div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-surface border border-line rounded-2xl p-5">
+      <div class="text-sm font-medium text-ink mb-4">Citas por estado</div>
+      @if (statusRows().length === 0) {
+        <p class="text-sm text-ink-soft m-0">Sin citas en este rango.</p>
+      } @else {
+        <div class="grid gap-4">
+          @for (row of statusRows(); track row.status) {
+            <div>
+              <div class="flex justify-between text-sm mb-1.5">
+                <span class="text-ink-soft">{{ row.label }}</span>
+                <span class="text-ink font-medium">{{ row.count }}</span>
               </div>
-            }
-          </dl>
-        }
-      </div>
-
-      <div class="bg-surface border border-line rounded-2xl p-5">
-        <div class="text-sm text-ink-soft mb-1">Barbero con más citas</div>
-        @if (s.busiestBarber; as b) {
-          <div class="font-medium text-ink">{{ b.fullName }} · {{ b.appointmentCount }} citas</div>
-        } @else {
-          <p class="text-sm text-ink-soft m-0">Sin datos en este rango.</p>
-        }
-      </div>
+              <div class="h-2 rounded-full bg-muted-bg overflow-hidden">
+                <div
+                  class="h-full bg-clay rounded-full transition-all duration-300 ease-out"
+                  [style.width.%]="statusPercent(row.count)"
+                ></div>
+              </div>
+            </div>
+          }
+        </div>
+      }
     </div>
   } @else if (loading()) {
     <div class="flex justify-center py-16">
