@@ -15,6 +15,9 @@ public interface BarberProfileRepository extends JpaRepository<BarberProfile, UU
     @Query("SELECT bp FROM BarberProfile bp JOIN FETCH bp.user WHERE bp.active = true")
     List<BarberProfile> findAllActiveWithUser();
 
+    @Query("SELECT bp FROM BarberProfile bp JOIN FETCH bp.user")
+    List<BarberProfile> findAllWithUser();
+
     @Query("SELECT bp FROM BarberProfile bp JOIN FETCH bp.user WHERE bp.userId = :id")
     Optional<BarberProfile> findByIdWithUser(UUID id);
 }

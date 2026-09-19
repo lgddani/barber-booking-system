@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { Appointment, AppointmentCreateRequest } from '../models/appointment.model';
+import { Appointment, AppointmentCreateRequest, AppointmentStatus } from '../models/appointment.model';
 
 @Injectable({ providedIn: 'root' })
 export class AppointmentsApiService {
@@ -12,8 +12,10 @@ export class AppointmentsApiService {
     return this.http.post<Appointment>(`${environment.apiUrl}/appointments`, request);
   }
 
-  list(): Observable<Appointment[]> {
-    return this.http.get<Appointment[]>(`${environment.apiUrl}/appointments`);
+  list(status?: AppointmentStatus): Observable<Appointment[]> {
+    return this.http.get<Appointment[]>(`${environment.apiUrl}/appointments`, {
+      params: status ? { status } : {}
+    });
   }
 
   cancel(id: string): Observable<Appointment> {

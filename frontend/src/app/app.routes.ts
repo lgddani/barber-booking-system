@@ -62,7 +62,32 @@ export const routes: Routes = [
   {
     path: 'admin',
     canActivate: [roleGuard(['ADMIN'])],
-    loadComponent: () => import('./features/admin/admin-home.component').then((m) => m.AdminHomeComponent)
+    loadComponent: () => import('./features/admin/admin-shell.component').then((m) => m.AdminShellComponent),
+    children: [
+      { path: '', pathMatch: 'full', redirectTo: 'servicios' },
+      {
+        path: 'servicios',
+        loadComponent: () =>
+          import('./features/admin/services/admin-services.component').then((m) => m.AdminServicesComponent)
+      },
+      {
+        path: 'barberos',
+        loadComponent: () =>
+          import('./features/admin/barbers/admin-barbers.component').then((m) => m.AdminBarbersComponent)
+      },
+      {
+        path: 'citas',
+        loadComponent: () =>
+          import('./features/admin/appointments/admin-appointments.component').then(
+            (m) => m.AdminAppointmentsComponent
+          )
+      },
+      {
+        path: 'estadisticas',
+        loadComponent: () =>
+          import('./features/admin/stats/admin-stats.component').then((m) => m.AdminStatsComponent)
+      }
+    ]
   },
   {
     path: '',

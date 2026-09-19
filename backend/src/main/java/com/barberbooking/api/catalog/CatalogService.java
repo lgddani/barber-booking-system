@@ -43,6 +43,12 @@ public class CatalogService {
         service.setActive(false);
     }
 
+    @Transactional
+    public void activate(UUID id) {
+        Service service = findOrThrow(id);
+        service.setActive(true);
+    }
+
     private void applyRequest(Service service, ServiceRequest request) {
         service.setName(request.name());
         service.setDescription(request.description());

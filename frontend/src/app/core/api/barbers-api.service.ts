@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { Barber } from '../models/barber.model';
+import { Barber, BarberCreateRequest, BarberUpdateRequest } from '../models/barber.model';
 import { WorkingHoursItem } from '../models/working-hours.model';
 import { ScheduleException, ScheduleExceptionRequest } from '../models/schedule-exception.model';
 
@@ -10,12 +10,30 @@ import { ScheduleException, ScheduleExceptionRequest } from '../models/schedule-
 export class BarbersApiService {
   private readonly http = inject(HttpClient);
 
-  list(): Observable<Barber[]> {
-    return this.http.get<Barber[]>(`${environment.apiUrl}/barbers`);
+  list(includeInactive = false): Observable<Barber[]> {
+    return this.http.get<Barber[]>(`${environment.apiUrl}/barbers`, {
+      params: { includeInactive }
+    });
   }
 
   get(id: string): Observable<Barber> {
     return this.http.get<Barber>(`${environment.apiUrl}/barbers/${id}`);
+  }
+
+  create(request: BarberCreateRequest): Observable<Barber> {
+    return this.http.post<Barber>(`${environment.apiUrl}/barbers`, request);
+  }
+
+  update(id: string, request: BarberUpdateRequest): Observable<Barber> {
+    return this.http.put<Barber>(`${environment.apiUrl}/barbers/${id}`, request);
+  }
+
+  deactivate(id: string): Observable<void> {
+    return this.http.delete<void>(`${environment.apiUrl}/barbers/${id}`);
+  }
+
+  activate(id: string): Observable<void> {
+    return this.http.patch<void>(`${environment.apiUrl}/barbers/${id}/activate`, {});
   }
 
   getWorkingHours(barberId: string): Observable<WorkingHoursItem[]> {

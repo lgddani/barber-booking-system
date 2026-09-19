@@ -2,6 +2,7 @@ package com.barberbooking.api.catalog;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -54,6 +55,12 @@ class ServiceCrudIT extends AbstractIntegrationTest {
 
         // ...pero la fila sigue existiendo si se piden también los inactivos.
         mockMvc.perform(get("/api/v1/services").param("includeInactive", "true").header("Authorization", auth))
+            .andExpect(jsonPath("$[?(@.id=='" + id + "')]").exists());
+
+        // Reactivar: vuelve a aparecer en el listado normal.
+        mockMvc.perform(patch("/api/v1/services/" + id + "/activate").header("Authorization", auth))
+            .andExpect(status().isNoContent());
+        mockMvc.perform(get("/api/v1/services").header("Authorization", auth))
             .andExpect(jsonPath("$[?(@.id=='" + id + "')]").exists());
     }
 

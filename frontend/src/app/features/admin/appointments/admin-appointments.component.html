@@ -1,0 +1,49 @@
+<main class="max-w-4xl mx-auto px-6 py-10">
+  <h1 class="font-display text-2xl font-semibold text-ink m-0 mb-1">Todas las citas</h1>
+  <p class="text-ink-soft text-sm mb-8">Vista completa de reservas de todos los clientes y barberos.</p>
+
+  <div class="flex items-center gap-2 mb-6">
+    <label class="text-sm text-ink-soft">Estado</label>
+    <select
+      #statusSelect
+      (change)="setStatusFilter(statusSelect.value)"
+      class="border border-line rounded-lg px-3 py-2 text-sm text-ink bg-transparent"
+    >
+      @for (option of statusOptions; track option.value) {
+        <option [value]="option.value" [selected]="option.value === statusFilter()">{{ option.label }}</option>
+      }
+    </select>
+  </div>
+
+  @if (loading()) {
+    <div class="flex justify-center py-16">
+      <mat-spinner diameter="32" />
+    </div>
+  } @else if (appointments().length === 0) {
+    <p class="text-center text-ink-soft py-10">No hay citas con ese filtro.</p>
+  } @else {
+    <div class="grid gap-3">
+      @for (appt of appointments(); track appt.id) {
+        <div class="bg-surface border border-line rounded-2xl p-4 flex items-center justify-between gap-4">
+          <div>
+            <div class="font-medium text-ink">
+              {{ serviceNames()[appt.serviceId] ?? 'Servicio' }} · {{ appt.customerName }}
+            </div>
+            <div class="text-sm text-ink-soft">
+              {{ barberNames()[appt.barberId] ?? 'Barbero' }} · {{ formatWhen(appt.startAt) }}
+            </div>
+          </div>
+          <span
+            class="text-xs font-medium px-3 py-1 rounded-full shrink-0"
+            [class.bg-clay-soft]="appt.status === 'CONFIRMED' || appt.status === 'PENDING'"
+            [class.text-clay-ink]="appt.status === 'CONFIRMED' || appt.status === 'PENDING'"
+            [class.bg-muted-bg]="appt.status !== 'CONFIRMED' && appt.status !== 'PENDING'"
+            [class.text-muted-ink]="appt.status !== 'CONFIRMED' && appt.status !== 'PENDING'"
+          >
+            {{ statusLabel(appt.status) }}
+          </span>
+        </div>
+      }
+    </div>
+  }
+</main>

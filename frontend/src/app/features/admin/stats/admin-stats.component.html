@@ -1,0 +1,73 @@
+<main class="max-w-2xl mx-auto px-6 py-10">
+  <h1 class="font-display text-2xl font-semibold text-ink m-0 mb-1">Estadísticas</h1>
+  <p class="text-ink-soft text-sm mb-8">Resumen del negocio en un rango de fechas.</p>
+
+  <div class="flex items-end gap-3 mb-6">
+    <div>
+      <label class="block text-sm text-ink-soft mb-1">Desde</label>
+      <input
+        type="date"
+        [value]="fromInput()"
+        #fromInputEl
+        (change)="fromInput.set(fromInputEl.value)"
+        class="border border-line rounded-lg px-3 py-2 text-sm text-ink bg-transparent"
+      />
+    </div>
+    <div>
+      <label class="block text-sm text-ink-soft mb-1">Hasta</label>
+      <input
+        type="date"
+        [value]="toInput()"
+        #toInputEl
+        (change)="toInput.set(toInputEl.value)"
+        class="border border-line rounded-lg px-3 py-2 text-sm text-ink bg-transparent"
+      />
+    </div>
+    <button mat-stroked-button (click)="load()">Aplicar</button>
+  </div>
+
+  @if (stats(); as s) {
+    <div class="grid gap-3">
+      <div class="bg-surface border border-line rounded-2xl p-5">
+        <div class="text-sm text-ink-soft mb-1">Total de citas</div>
+        <div class="font-display text-3xl font-semibold text-ink">{{ s.totalAppointments }}</div>
+      </div>
+
+      <div class="bg-surface border border-line rounded-2xl p-5">
+        <div class="text-sm text-ink-soft mb-1">Ingresos (citas completadas)</div>
+        <div class="font-display text-3xl font-semibold text-clay">${{ s.estimatedRevenue }}</div>
+      </div>
+
+      <div class="bg-surface border border-line rounded-2xl p-5">
+        <div class="text-sm text-ink-soft mb-3">Por estado</div>
+        @if (statusRows().length === 0) {
+          <p class="text-sm text-ink-soft m-0">Sin citas en este rango.</p>
+        } @else {
+          <dl class="text-sm space-y-2 m-0">
+            @for (row of statusRows(); track row.status) {
+              <div class="flex justify-between">
+                <dt class="text-ink-soft">{{ row.label }}</dt>
+                <dd class="text-ink font-medium m-0">{{ row.count }}</dd>
+              </div>
+            }
+          </dl>
+        }
+      </div>
+
+      <div class="bg-surface border border-line rounded-2xl p-5">
+        <div class="text-sm text-ink-soft mb-1">Barbero con más citas</div>
+        @if (s.busiestBarber; as b) {
+          <div class="font-medium text-ink">{{ b.fullName }} · {{ b.appointmentCount }} citas</div>
+        } @else {
+          <p class="text-sm text-ink-soft m-0">Sin datos en este rango.</p>
+        }
+      </div>
+    </div>
+  } @else if (loading()) {
+    <div class="flex justify-center py-16">
+      <mat-spinner diameter="32" />
+    </div>
+  } @else {
+    <p class="text-center text-ink-soft py-10">No se pudieron cargar las estadísticas.</p>
+  }
+</main>

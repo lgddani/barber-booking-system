@@ -28,6 +28,12 @@ public class BarberService {
             .toList();
     }
 
+    public List<BarberResponse> listAll() {
+        return barberProfileRepository.findAllWithUser().stream()
+            .map(this::toResponse)
+            .toList();
+    }
+
     public BarberResponse get(UUID id) {
         return toResponse(findProfileOrThrow(id));
     }
@@ -73,12 +79,20 @@ public class BarberService {
         profile.getUser().setEnabled(false);
     }
 
+    @Transactional
+    public void activate(UUID id) {
+        BarberProfile profile = findProfileOrThrow(id);
+        profile.setActive(true);
+        profile.getUser().setEnabled(true);
+    }
+
     private BarberProfile findProfileOrThrow(UUID id) {
         return barberProfileRepository.findByIdWithUser(id)
             .orElseThrow(() -> new ResourceNotFoundException("Barbero no encontrado: " + id));
     }
 
     private BarberResponse toResponse(BarberProfile profile) {
-        return new BarberResponse(profile.getUserId(), profile.getUser().getFullName(), profile.getBio(), profile.isActive());
+        User user = profile.getUser();
+        return new BarberResponse(profile.getUserId(), user.getFullName(), user.getPhone(), profile.getBio(), profile.isActive());
     }
 }

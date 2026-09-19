@@ -6,3 +6,10 @@ export interface ServiceOffering {
   price: number;
   active: boolean;
 }
+
+export interface ServiceOfferingRequest {
+  name: string;
+  description?: string;
+  durationMinutes: number;
+  price: number;
+}
