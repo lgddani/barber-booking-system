@@ -14,12 +14,13 @@ public record AppointmentResponse(
     Instant endAt,
     AppointmentStatus status,
     BigDecimal priceAtBooking,
-    String notes
+    String notes,
+    Instant createdAt
 ) {
     static AppointmentResponse from(Appointment a, String customerName) {
         return new AppointmentResponse(
             a.getId(), a.getCustomerId(), customerName, a.getBarberId(), a.getServiceId(),
-            a.getStartAt(), a.getEndAt(), a.getStatus(), a.getPriceAtBooking(), a.getNotes()
+            a.getStartAt(), a.getEndAt(), a.getStatus(), a.getPriceAtBooking(), a.getNotes(), a.getCreatedAt()
         );
     }
 }

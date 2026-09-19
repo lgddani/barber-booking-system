@@ -11,6 +11,7 @@ export interface Appointment {
   status: AppointmentStatus;
   priceAtBooking: number;
   notes: string | null;
+  createdAt: string;
 }
 
 export interface AppointmentCreateRequest {

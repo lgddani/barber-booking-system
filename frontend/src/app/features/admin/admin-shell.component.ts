@@ -1,37 +1,79 @@
-import { Component, inject } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { MatButtonModule } from '@angular/material/button';
+import { Component, computed, inject, signal } from '@angular/core';
+import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AuthService } from '../../core/auth/auth.service';
+import { AppointmentsApiService } from '../../core/api/appointments-api.service';
+import { Appointment } from '../../core/models/appointment.model';
 
 @Component({
   selector: 'app-admin-shell',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive, RouterOutlet, MatButtonModule],
-  template: `
-    <header class="border-b border-line bg-surface px-6 py-4 flex items-center justify-between">
-      <span class="font-display text-lg font-semibold text-ink">Bella Barba</span>
-      <nav class="flex items-center gap-5">
-        <a
-          routerLink="servicios"
-          routerLinkActive="text-clay font-semibold"
-          [routerLinkActiveOptions]="{ exact: false }"
-          class="text-sm text-ink-soft"
-        >
-          Servicios
-        </a>
-        <a routerLink="barberos" routerLinkActive="text-clay font-semibold" class="text-sm text-ink-soft">
-          Barberos
-        </a>
-        <a routerLink="citas" routerLinkActive="text-clay font-semibold" class="text-sm text-ink-soft"> Citas </a>
-        <a routerLink="estadisticas" routerLinkActive="text-clay font-semibold" class="text-sm text-ink-soft">
-          Estadísticas
-        </a>
-        <button mat-stroked-button (click)="auth.logout()">Salir</button>
-      </nav>
-    </header>
-    <router-outlet />
-  `
+  imports: [RouterLink, RouterLinkActive, RouterOutlet, MatIconModule, MatProgressSpinnerModule],
+  templateUrl: './admin-shell.component.html'
 })
 export class AdminShellComponent {
   readonly auth = inject(AuthService);
+  private readonly appointmentsApi = inject(AppointmentsApiService);
+  private readonly router = inject(Router);
+
+  readonly notificationsOpen = signal(false);
+  readonly profileOpen = signal(false);
+  readonly loadingActivity = signal(false);
+  readonly recentAppointments = signal<Appointment[]>([]);
+  private activityLoaded = false;
+
+  readonly initial = computed(() => (this.auth.user()?.fullName ?? '?').charAt(0).toUpperCase());
+
+  toggleNotifications(): void {
+    this.profileOpen.set(false);
+    this.notificationsOpen.update((open) => !open);
+    if (this.notificationsOpen() && !this.activityLoaded) {
+      this.loadActivity();
+    }
+  }
+
+  toggleProfile(): void {
+    this.notificationsOpen.set(false);
+    this.profileOpen.update((open) => !open);
+  }
+
+  closeDropdowns(): void {
+    this.notificationsOpen.set(false);
+    this.profileOpen.set(false);
+  }
+
+  goToAppointments(): void {
+    this.closeDropdowns();
+    this.router.navigateByUrl('/admin/citas');
+  }
+
+  formatWhen(startAt: string): string {
+    const date = new Date(startAt);
+    const formatted = new Intl.DateTimeFormat('es', {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(date);
+    return formatted.charAt(0).toUpperCase() + formatted.slice(1);
+  }
+
+  private loadActivity(): void {
+    this.loadingActivity.set(true);
+    // "Simple": las confirmadas mas recientemente reservadas (createdAt), sin
+    // concepto real de leido/no-leido — eso necesitaria guardar por admin
+    // que citas ya vio, que quedo fuera de esta pasada a proposito.
+    this.appointmentsApi.list('CONFIRMED').subscribe({
+      next: (appointments) => {
+        this.recentAppointments.set(
+          [...appointments].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 5)
+        );
+        this.loadingActivity.set(false);
+        this.activityLoaded = true;
+      },
+      error: () => this.loadingActivity.set(false)
+    });
+  }
 }

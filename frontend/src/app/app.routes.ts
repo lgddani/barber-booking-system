@@ -100,6 +100,11 @@ export const routes: Routes = [
         path: 'estadisticas',
         loadComponent: () =>
           import('./features/admin/stats/admin-stats.component').then((m) => m.AdminStatsComponent)
+      },
+      {
+        path: 'configuracion',
+        loadComponent: () =>
+          import('./features/admin/settings/admin-settings.component').then((m) => m.AdminSettingsComponent)
       }
     ]
   },

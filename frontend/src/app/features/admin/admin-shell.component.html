@@ -1,0 +1,137 @@
+@if (notificationsOpen() || profileOpen()) {
+  <div class="fixed inset-0 z-10" (click)="closeDropdowns()"></div>
+}
+
+<div class="min-h-screen flex flex-col">
+  <header class="h-16 bg-surface border-b border-line flex items-center justify-between px-6 shrink-0 relative z-20">
+    <div class="flex items-center gap-2">
+      <mat-icon class="text-clay">content_cut</mat-icon>
+      <span class="font-display text-lg font-semibold text-ink">Bella Barba</span>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <div class="relative">
+        <button
+          type="button"
+          (click)="toggleNotifications()"
+          class="w-10 h-10 rounded-full flex items-center justify-center text-ink-soft hover:bg-cream transition-colors duration-150"
+          aria-label="Actividad reciente"
+        >
+          <mat-icon>notifications</mat-icon>
+        </button>
+        @if (notificationsOpen()) {
+          <div class="absolute right-0 mt-2 w-80 bg-surface border border-line rounded-xl shadow-lg py-2">
+            <div class="px-4 py-2 text-sm font-semibold text-ink border-b border-line">Actividad reciente</div>
+            @if (loadingActivity()) {
+              <div class="flex justify-center py-6">
+                <mat-spinner diameter="24" />
+              </div>
+            } @else if (recentAppointments().length === 0) {
+              <p class="px-4 py-4 text-sm text-ink-soft m-0">Sin citas recientes.</p>
+            } @else {
+              @for (appt of recentAppointments(); track appt.id) {
+                <button
+                  type="button"
+                  (click)="goToAppointments()"
+                  class="w-full text-left px-4 py-2.5 hover:bg-cream transition-colors duration-150"
+                >
+                  <div class="text-sm font-medium text-ink">{{ appt.customerName }}</div>
+                  <div class="text-xs text-ink-soft">{{ formatWhen(appt.startAt) }}</div>
+                </button>
+              }
+            }
+          </div>
+        }
+      </div>
+
+      <div class="relative">
+        <button
+          type="button"
+          (click)="toggleProfile()"
+          class="flex items-center gap-2 pl-2 pr-1 py-1 rounded-full hover:bg-cream transition-colors duration-150"
+        >
+          <div
+            class="w-8 h-8 rounded-full bg-clay-soft text-clay-ink flex items-center justify-center text-sm font-semibold"
+          >
+            {{ initial() }}
+          </div>
+          <span class="text-sm text-ink">{{ auth.user()?.fullName }}</span>
+          <mat-icon class="text-ink-soft" style="font-size: 18px; width: 18px; height: 18px;">expand_more</mat-icon>
+        </button>
+        @if (profileOpen()) {
+          <div class="absolute right-0 mt-2 w-44 bg-surface border border-line rounded-xl shadow-lg py-1">
+            <button
+              type="button"
+              (click)="auth.logout()"
+              class="w-full text-left px-4 py-2 text-sm text-ink hover:bg-cream transition-colors duration-150"
+            >
+              Cerrar sesión
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+  </header>
+
+  <div class="flex flex-1 min-h-0">
+    <aside class="w-56 bg-surface border-r border-line flex flex-col shrink-0">
+      <nav class="flex-1 p-3 flex flex-col gap-1">
+        <a
+          routerLink="/admin"
+          class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-ink-soft hover:bg-cream transition-colors duration-150"
+        >
+          <mat-icon style="font-size: 20px; width: 20px; height: 20px;">home</mat-icon>
+          Inicio
+        </a>
+        <a
+          routerLink="servicios"
+          routerLinkActive="bg-clay-soft text-clay-ink font-medium"
+          class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-ink-soft hover:bg-cream transition-colors duration-150"
+        >
+          <mat-icon style="font-size: 20px; width: 20px; height: 20px;">content_cut</mat-icon>
+          Servicios
+        </a>
+        <a
+          routerLink="barberos"
+          routerLinkActive="bg-clay-soft text-clay-ink font-medium"
+          class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-ink-soft hover:bg-cream transition-colors duration-150"
+        >
+          <mat-icon style="font-size: 20px; width: 20px; height: 20px;">groups</mat-icon>
+          Barberos
+        </a>
+        <a
+          routerLink="citas"
+          routerLinkActive="bg-clay-soft text-clay-ink font-medium"
+          class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-ink-soft hover:bg-cream transition-colors duration-150"
+        >
+          <mat-icon style="font-size: 20px; width: 20px; height: 20px;">event</mat-icon>
+          Citas
+        </a>
+        <a
+          routerLink="estadisticas"
+          routerLinkActive="bg-clay-soft text-clay-ink font-medium"
+          class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-ink-soft hover:bg-cream transition-colors duration-150"
+        >
+          <mat-icon style="font-size: 20px; width: 20px; height: 20px;">bar_chart</mat-icon>
+          Estadísticas
+        </a>
+        <a
+          routerLink="configuracion"
+          routerLinkActive="bg-clay-soft text-clay-ink font-medium"
+          class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-ink-soft hover:bg-cream transition-colors duration-150"
+        >
+          <mat-icon style="font-size: 20px; width: 20px; height: 20px;">settings</mat-icon>
+          Configuración
+        </a>
+      </nav>
+      <div class="p-4 border-t border-line flex items-center gap-2 text-xs text-ink-soft">
+        <mat-icon class="text-clay" style="font-size: 16px; width: 16px; height: 16px;">content_cut</mat-icon>
+        La mejor versión de ti, empieza aquí.
+      </div>
+    </aside>
+
+    <main class="flex-1 overflow-y-auto">
+      <router-outlet />
+    </main>
+  </div>
+</div>

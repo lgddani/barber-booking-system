@@ -1,68 +1,25 @@
-<main class="max-w-3xl mx-auto px-6 py-10">
+<main class="max-w-5xl mx-auto px-6 py-10">
   <h1 class="font-display text-2xl font-semibold text-ink m-0 mb-1">Servicios</h1>
-  <p class="text-ink-soft text-sm mb-8">El catálogo que ven tus clientes al reservar.</p>
+  <p class="text-ink-soft text-sm mb-6">Gestiona los servicios que ofrece la barbería y su respectiva información.</p>
 
-  <div class="bg-surface border border-line rounded-2xl p-5 mb-6">
-    <h2 class="font-display text-base font-semibold text-ink m-0 mb-3">
-      {{ isEditing() ? 'Editar servicio' : 'Nuevo servicio' }}
-    </h2>
-
-    <div class="grid gap-3">
+  <div class="flex items-center justify-between gap-4 mb-5">
+    <div class="relative flex-1 max-w-xs">
+      <mat-icon class="absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted pointer-events-none" style="font-size: 20px; width: 20px; height: 20px;">
+        search
+      </mat-icon>
       <input
         type="text"
-        placeholder="Nombre"
-        [value]="name()"
-        #nameInput
-        (input)="name.set(nameInput.value)"
-        class="border border-line rounded-lg px-3 py-2 text-sm text-ink bg-transparent"
+        placeholder="Buscar servicio..."
+        [value]="searchTerm()"
+        #searchInput
+        (input)="setSearchTerm(searchInput.value)"
+        class="w-full border border-line rounded-lg pl-10 pr-3 py-2 text-sm text-ink bg-surface focus:outline-none focus:ring-2 focus:border-clay focus:ring-clay/20 transition duration-200 ease-out"
       />
-      <input
-        type="text"
-        placeholder="Descripción (opcional)"
-        [value]="description()"
-        #descInput
-        (input)="description.set(descInput.value)"
-        class="border border-line rounded-lg px-3 py-2 text-sm text-ink bg-transparent"
-      />
-      <div class="flex items-center gap-3">
-        <label class="text-sm text-ink-soft">Duración (min)</label>
-        <input
-          type="number"
-          min="1"
-          [value]="durationMinutes()"
-          #durInput
-          (input)="durationMinutes.set(+durInput.value)"
-          class="border border-line rounded-lg px-3 py-2 text-sm text-ink bg-transparent w-24"
-        />
-        <label class="text-sm text-ink-soft">Precio</label>
-        <input
-          type="number"
-          min="0"
-          step="0.01"
-          [value]="price()"
-          #priceInput
-          (input)="price.set(+priceInput.value)"
-          class="border border-line rounded-lg px-3 py-2 text-sm text-ink bg-transparent w-24"
-        />
-      </div>
-
-      @if (errorMessage()) {
-        <p class="text-sm m-0" style="color: var(--mat-sys-error)">{{ errorMessage() }}</p>
-      }
-
-      <div class="flex items-center gap-2">
-        <button mat-flat-button [disabled]="submitting()" (click)="save()">
-          @if (submitting()) {
-            <mat-spinner diameter="20" />
-          } @else {
-            {{ isEditing() ? 'Guardar cambios' : 'Crear servicio' }}
-          }
-        </button>
-        @if (isEditing()) {
-          <button mat-button type="button" (click)="startCreate()">Cancelar edición</button>
-        }
-      </div>
     </div>
+    <button mat-flat-button (click)="openCreateModal()">
+      <mat-icon style="vertical-align: middle;">add</mat-icon>
+      Nuevo servicio
+    </button>
   </div>
 
   @if (loading()) {
@@ -70,30 +27,175 @@
       <mat-spinner diameter="32" />
     </div>
   } @else {
-    <div class="grid gap-3">
-      @for (service of services(); track service.id) {
-        <div class="bg-surface border border-line rounded-2xl p-4 flex items-center justify-between gap-4">
-          <div>
-            <div class="font-medium text-ink">{{ service.name }}</div>
-            <div class="text-sm text-ink-soft">{{ service.durationMinutes }} min · ${{ service.price }}</div>
-          </div>
-          <div class="flex items-center gap-2 shrink-0">
-            <span
-              class="text-xs font-medium px-3 py-1 rounded-full"
-              [class.bg-clay-soft]="service.active"
-              [class.text-clay-ink]="service.active"
-              [class.bg-muted-bg]="!service.active"
-              [class.text-muted-ink]="!service.active"
-            >
-              {{ service.active ? 'Activo' : 'Inactivo' }}
-            </span>
-            <button mat-stroked-button (click)="startEdit(service)">Editar</button>
-            <button mat-stroked-button [disabled]="togglingId() === service.id" (click)="toggleActive(service)">
-              {{ service.active ? 'Desactivar' : 'Activar' }}
-            </button>
-          </div>
-        </div>
-      }
+    <div class="bg-surface border border-line rounded-2xl overflow-hidden overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-line text-left text-ink-soft">
+            <th class="font-medium px-4 py-3">Nombre</th>
+            <th class="font-medium px-4 py-3">Descripción</th>
+            <th class="font-medium px-4 py-3">Duración</th>
+            <th class="font-medium px-4 py-3">Precio</th>
+            <th class="font-medium px-4 py-3">Estado</th>
+            <th class="font-medium px-4 py-3 text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (service of pagedServices(); track service.id) {
+            <tr class="border-b border-line last:border-0">
+              <td class="px-4 py-3">
+                <div class="flex items-center gap-3">
+                  <div class="w-9 h-9 rounded-full bg-clay-soft text-clay-ink flex items-center justify-center shrink-0">
+                    <mat-icon style="font-size: 18px; width: 18px; height: 18px;">content_cut</mat-icon>
+                  </div>
+                  <span class="font-medium text-ink">{{ service.name }}</span>
+                </div>
+              </td>
+              <td class="px-4 py-3 text-ink-soft max-w-xs truncate">{{ service.description || '—' }}</td>
+              <td class="px-4 py-3 text-ink-soft whitespace-nowrap">{{ service.durationMinutes }} min</td>
+              <td class="px-4 py-3 text-ink-soft whitespace-nowrap">${{ service.price }}</td>
+              <td class="px-4 py-3">
+                <span
+                  class="text-xs font-medium px-3 py-1 rounded-full"
+                  [class.bg-clay-soft]="service.active"
+                  [class.text-clay-ink]="service.active"
+                  [class.bg-muted-bg]="!service.active"
+                  [class.text-muted-ink]="!service.active"
+                >
+                  {{ service.active ? 'Activo' : 'Inactivo' }}
+                </span>
+              </td>
+              <td class="px-4 py-3">
+                <div class="flex justify-end gap-1">
+                  <button mat-icon-button (click)="openEditModal(service)" aria-label="Editar servicio">
+                    <mat-icon style="font-size: 18px; width: 18px; height: 18px;">edit</mat-icon>
+                  </button>
+                  <button
+                    mat-icon-button
+                    [disabled]="togglingId() === service.id"
+                    (click)="toggleActive(service)"
+                    [attr.aria-label]="service.active ? 'Desactivar servicio' : 'Activar servicio'"
+                  >
+                    <mat-icon style="font-size: 18px; width: 18px; height: 18px;">
+                      {{ service.active ? 'block' : 'check_circle' }}
+                    </mat-icon>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="6" class="px-4 py-10 text-center text-ink-soft">No se encontraron servicios.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="flex items-center justify-between mt-4 text-sm text-ink-soft">
+      <span>Mostrando {{ rangeStart() }}-{{ rangeEnd() }} de {{ filteredServices().length }} servicios</span>
+      <div class="flex items-center gap-2">
+        <button mat-icon-button [disabled]="currentPage() === 1" (click)="prevPage()" aria-label="Página anterior">
+          <mat-icon>chevron_left</mat-icon>
+        </button>
+        <span class="w-8 h-8 rounded-lg bg-clay text-clay-on flex items-center justify-center font-medium">
+          {{ currentPage() }}
+        </span>
+        <button
+          mat-icon-button
+          [disabled]="currentPage() === totalPages()"
+          (click)="nextPage()"
+          aria-label="Página siguiente"
+        >
+          <mat-icon>chevron_right</mat-icon>
+        </button>
+      </div>
     </div>
   }
 </main>
+
+@if (modalOpen()) {
+  <div class="fixed inset-0 bg-ink/40 flex items-center justify-center z-30 px-4" (click)="closeModal()">
+    <div class="bg-surface rounded-2xl p-6 max-w-md w-full" (click)="$event.stopPropagation()">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="font-display text-lg font-semibold text-ink m-0">
+          {{ isEditing() ? 'Editar servicio' : 'Nuevo servicio' }}
+        </h2>
+        <button mat-icon-button (click)="closeModal()" aria-label="Cerrar">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <div class="grid gap-3">
+        <div class="flex flex-col gap-1.5">
+          <label class="text-sm font-medium text-ink">Nombre</label>
+          <input
+            type="text"
+            [value]="name()"
+            #nameInput
+            (input)="name.set(nameInput.value)"
+            class="border border-line rounded-lg px-3 py-2 text-sm text-ink bg-transparent focus:outline-none focus:ring-2 focus:border-clay focus:ring-clay/20 transition duration-200 ease-out"
+          />
+        </div>
+        <div class="flex flex-col gap-1.5">
+          <label class="text-sm font-medium text-ink">Descripción</label>
+          <textarea
+            rows="2"
+            [value]="description()"
+            #descInput
+            (input)="description.set(descInput.value)"
+            class="border border-line rounded-lg px-3 py-2 text-sm text-ink bg-transparent focus:outline-none focus:ring-2 focus:border-clay focus:ring-clay/20 transition duration-200 ease-out resize-none"
+          ></textarea>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="flex flex-col gap-1.5">
+            <label class="text-sm font-medium text-ink">Duración (min)</label>
+            <input
+              type="number"
+              min="1"
+              [value]="durationMinutes()"
+              #durInput
+              (input)="durationMinutes.set(+durInput.value)"
+              class="border border-line rounded-lg px-3 py-2 text-sm text-ink bg-transparent focus:outline-none focus:ring-2 focus:border-clay focus:ring-clay/20 transition duration-200 ease-out"
+            />
+          </div>
+          <div class="flex flex-col gap-1.5">
+            <label class="text-sm font-medium text-ink">Precio</label>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              [value]="price()"
+              #priceInput
+              (input)="price.set(+priceInput.value)"
+              class="border border-line rounded-lg px-3 py-2 text-sm text-ink bg-transparent focus:outline-none focus:ring-2 focus:border-clay focus:ring-clay/20 transition duration-200 ease-out"
+            />
+          </div>
+        </div>
+
+        @if (isEditing()) {
+          <div class="flex items-center justify-between pt-1">
+            <label class="text-sm font-medium text-ink">Estado</label>
+            <mat-slide-toggle [checked]="activeToggle()" (change)="activeToggle.set($event.checked)">
+              {{ activeToggle() ? 'Activo' : 'Inactivo' }}
+            </mat-slide-toggle>
+          </div>
+        }
+
+        @if (errorMessage()) {
+          <p class="text-sm text-error m-0">{{ errorMessage() }}</p>
+        }
+
+        <div class="flex items-center gap-2 pt-2">
+          <button mat-flat-button class="flex-1" [disabled]="submitting()" (click)="save()">
+            @if (submitting()) {
+              <mat-spinner diameter="20" />
+            } @else {
+              Guardar
+            }
+          </button>
+          <button mat-stroked-button class="flex-1" type="button" (click)="closeModal()">Cancelar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
