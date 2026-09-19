@@ -1,49 +1,109 @@
-<main class="max-w-4xl mx-auto px-6 py-10">
+<main class="max-w-5xl mx-auto px-6 py-10">
   <h1 class="font-display text-2xl font-semibold text-ink m-0 mb-1">Todas las citas</h1>
-  <p class="text-ink-soft text-sm mb-8">Vista completa de reservas de todos los clientes y barberos.</p>
+  <p class="text-ink-soft text-sm mb-6">Vista completa de reservas de todos los clientes y barberos.</p>
 
-  <div class="flex items-center gap-2 mb-6">
-    <label class="text-sm text-ink-soft">Estado</label>
-    <select
-      #statusSelect
-      (change)="setStatusFilter(statusSelect.value)"
-      class="border border-line rounded-lg px-3 py-2 text-sm text-ink bg-transparent"
-    >
-      @for (option of statusOptions; track option.value) {
-        <option [value]="option.value" [selected]="option.value === statusFilter()">{{ option.label }}</option>
-      }
-    </select>
+  <div class="flex items-center justify-between gap-4 mb-5">
+    <div class="relative flex-1 max-w-xs">
+      <mat-icon
+        class="absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted pointer-events-none"
+        style="font-size: 20px; width: 20px; height: 20px;"
+      >
+        search
+      </mat-icon>
+      <input
+        type="text"
+        placeholder="Buscar cliente, servicio o barbero..."
+        [value]="searchTerm()"
+        #searchInput
+        (input)="setSearchTerm(searchInput.value)"
+        class="w-full border border-line rounded-lg pl-10 pr-3 py-2 text-sm text-ink bg-surface focus:outline-none focus:ring-2 focus:border-clay focus:ring-clay/20 transition duration-200 ease-out"
+      />
+    </div>
+    <div class="flex items-center gap-2 shrink-0">
+      <label class="text-sm text-ink-soft">Estado</label>
+      <select
+        #statusSelect
+        (change)="setStatusFilter(statusSelect.value)"
+        class="border border-line rounded-lg px-3 py-2 text-sm text-ink bg-surface focus:outline-none focus:ring-2 focus:border-clay focus:ring-clay/20 transition duration-200 ease-out"
+      >
+        @for (option of statusOptions; track option.value) {
+          <option [value]="option.value" [selected]="option.value === statusFilter()">{{ option.label }}</option>
+        }
+      </select>
+    </div>
   </div>
 
   @if (loading()) {
     <div class="flex justify-center py-16">
       <mat-spinner diameter="32" />
     </div>
-  } @else if (appointments().length === 0) {
-    <p class="text-center text-ink-soft py-10">No hay citas con ese filtro.</p>
   } @else {
-    <div class="grid gap-3">
-      @for (appt of appointments(); track appt.id) {
-        <div class="bg-surface border border-line rounded-2xl p-4 flex items-center justify-between gap-4">
-          <div>
-            <div class="font-medium text-ink">
-              {{ serviceNames()[appt.serviceId] ?? 'Servicio' }} · {{ appt.customerName }}
-            </div>
-            <div class="text-sm text-ink-soft">
-              {{ barberNames()[appt.barberId] ?? 'Barbero' }} · {{ formatWhen(appt.startAt) }}
-            </div>
-          </div>
-          <span
-            class="text-xs font-medium px-3 py-1 rounded-full shrink-0"
-            [class.bg-clay-soft]="appt.status === 'CONFIRMED' || appt.status === 'PENDING'"
-            [class.text-clay-ink]="appt.status === 'CONFIRMED' || appt.status === 'PENDING'"
-            [class.bg-muted-bg]="appt.status !== 'CONFIRMED' && appt.status !== 'PENDING'"
-            [class.text-muted-ink]="appt.status !== 'CONFIRMED' && appt.status !== 'PENDING'"
-          >
-            {{ statusLabel(appt.status) }}
-          </span>
-        </div>
-      }
+    <div class="bg-surface border border-line rounded-2xl overflow-hidden overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-line text-left text-ink-soft">
+            <th class="font-medium px-4 py-3">Cliente</th>
+            <th class="font-medium px-4 py-3">Servicio</th>
+            <th class="font-medium px-4 py-3">Barbero</th>
+            <th class="font-medium px-4 py-3">Fecha y hora</th>
+            <th class="font-medium px-4 py-3">Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (appt of pagedAppointments(); track appt.id) {
+            <tr class="border-b border-line last:border-0">
+              <td class="px-4 py-3">
+                <div class="flex items-center gap-3">
+                  <div
+                    class="w-9 h-9 rounded-full bg-clay-soft text-clay-ink flex items-center justify-center text-sm font-semibold shrink-0"
+                  >
+                    {{ appt.customerName.charAt(0) }}
+                  </div>
+                  <span class="font-medium text-ink">{{ appt.customerName }}</span>
+                </div>
+              </td>
+              <td class="px-4 py-3 text-ink-soft whitespace-nowrap">{{ serviceNames()[appt.serviceId] ?? '—' }}</td>
+              <td class="px-4 py-3 text-ink-soft whitespace-nowrap">{{ barberNames()[appt.barberId] ?? '—' }}</td>
+              <td class="px-4 py-3 text-ink-soft whitespace-nowrap">{{ formatWhen(appt.startAt) }}</td>
+              <td class="px-4 py-3">
+                <span
+                  class="text-xs font-medium px-3 py-1 rounded-full"
+                  [class.bg-clay-soft]="appt.status === 'CONFIRMED' || appt.status === 'PENDING'"
+                  [class.text-clay-ink]="appt.status === 'CONFIRMED' || appt.status === 'PENDING'"
+                  [class.bg-muted-bg]="appt.status !== 'CONFIRMED' && appt.status !== 'PENDING'"
+                  [class.text-muted-ink]="appt.status !== 'CONFIRMED' && appt.status !== 'PENDING'"
+                >
+                  {{ statusLabel(appt.status) }}
+                </span>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="5" class="px-4 py-10 text-center text-ink-soft">No hay citas con ese filtro.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="flex items-center justify-between mt-4 text-sm text-ink-soft">
+      <span>Mostrando {{ rangeStart() }}-{{ rangeEnd() }} de {{ filteredAppointments().length }} citas</span>
+      <div class="flex items-center gap-2">
+        <button mat-icon-button [disabled]="currentPage() === 1" (click)="prevPage()" aria-label="Página anterior">
+          <mat-icon>chevron_left</mat-icon>
+        </button>
+        <span class="w-8 h-8 rounded-lg bg-clay text-clay-on flex items-center justify-center font-medium">
+          {{ currentPage() }}
+        </span>
+        <button
+          mat-icon-button
+          [disabled]="currentPage() === totalPages()"
+          (click)="nextPage()"
+          aria-label="Página siguiente"
+        >
+          <mat-icon>chevron_right</mat-icon>
+        </button>
+      </div>
     </div>
   }
 </main>
