@@ -35,7 +35,29 @@ export const routes: Routes = [
   {
     path: 'barbero',
     canActivate: [roleGuard(['BARBER'])],
-    loadComponent: () => import('./features/barber/barber-home.component').then((m) => m.BarberHomeComponent)
+    loadComponent: () => import('./features/barber/barber-shell.component').then((m) => m.BarberShellComponent),
+    children: [
+      { path: '', pathMatch: 'full', redirectTo: 'agenda' },
+      {
+        path: 'agenda',
+        loadComponent: () =>
+          import('./features/barber/agenda/barber-agenda.component').then((m) => m.BarberAgendaComponent)
+      },
+      {
+        path: 'horarios',
+        loadComponent: () =>
+          import('./features/barber/working-hours/barber-working-hours.component').then(
+            (m) => m.BarberWorkingHoursComponent
+          )
+      },
+      {
+        path: 'bloqueos',
+        loadComponent: () =>
+          import('./features/barber/exceptions/barber-exceptions.component').then(
+            (m) => m.BarberExceptionsComponent
+          )
+      }
+    ]
   },
   {
     path: 'admin',

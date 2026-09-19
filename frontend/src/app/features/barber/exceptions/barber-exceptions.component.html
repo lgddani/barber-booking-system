@@ -1,0 +1,102 @@
+<main class="max-w-2xl mx-auto px-6 py-10">
+  <h1 class="font-display text-2xl font-semibold text-ink m-0 mb-1">Bloqueos y días especiales</h1>
+  <p class="text-ink-soft text-sm mb-8">
+    Cierra un día puntual (vacaciones, feriado) o dale un horario distinto al de siempre.
+  </p>
+
+  <div class="bg-surface border border-line rounded-2xl p-5 mb-6">
+    <h2 class="font-display text-base font-semibold text-ink m-0 mb-3">Agregar bloqueo</h2>
+
+    <div class="grid gap-3">
+      <div class="flex items-center gap-2">
+        <label class="text-sm text-ink-soft w-16">Fecha</label>
+        <input
+          type="date"
+          [value]="newDate()"
+          [min]="minDate"
+          #dateInput
+          (change)="newDate.set(dateInput.value)"
+          class="border border-line rounded-lg px-2 py-1.5 text-sm text-ink bg-transparent"
+        />
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button
+          type="button"
+          mat-stroked-button
+          [class.bg-clay-soft]="newType() === 'CLOSED'"
+          (click)="setType('CLOSED')"
+        >
+          Día cerrado
+        </button>
+        <button type="button" mat-stroked-button [class.bg-clay-soft]="isCustomHours()" (click)="setType('CUSTOM_HOURS')">
+          Horario especial
+        </button>
+      </div>
+
+      @if (isCustomHours()) {
+        <div class="flex items-center gap-2">
+          <input
+            type="time"
+            [value]="newStart()"
+            #startInput
+            (change)="newStart.set(startInput.value)"
+            class="border border-line rounded-lg px-2 py-1.5 text-sm text-ink bg-transparent"
+          />
+          <span class="text-ink-soft text-sm">a</span>
+          <input
+            type="time"
+            [value]="newEnd()"
+            #endInput
+            (change)="newEnd.set(endInput.value)"
+            class="border border-line rounded-lg px-2 py-1.5 text-sm text-ink bg-transparent"
+          />
+        </div>
+      }
+
+      @if (errorMessage()) {
+        <p class="text-sm m-0" style="color: var(--mat-sys-error)">{{ errorMessage() }}</p>
+      }
+
+      <button mat-flat-button class="w-fit" [disabled]="submitting()" (click)="create()">
+        @if (submitting()) {
+          <mat-spinner diameter="20" />
+        } @else {
+          Agregar
+        }
+      </button>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="flex justify-center py-16">
+      <mat-spinner diameter="32" />
+    </div>
+  } @else if (exceptions().length === 0) {
+    <p class="text-center text-ink-soft py-10">No tienes bloqueos próximos.</p>
+  } @else {
+    <div class="grid gap-3">
+      @for (exception of exceptions(); track exception.id) {
+        <div class="bg-surface border border-line rounded-2xl p-4 flex items-center justify-between gap-4">
+          <div>
+            <div class="font-medium text-ink">{{ formatDate(exception.date) }}</div>
+            <div class="text-sm text-ink-soft">
+              {{ typeLabel(exception.type) }}
+              @if (exception.type === 'CUSTOM_HOURS') {
+                · {{ exception.startTime?.slice(0, 5) }}–{{ exception.endTime?.slice(0, 5) }}
+              }
+            </div>
+          </div>
+          <button
+            mat-icon-button
+            [disabled]="deletingId() === exception.id"
+            (click)="delete(exception)"
+            aria-label="Quitar bloqueo"
+          >
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+      }
+    </div>
+  }
+</main>

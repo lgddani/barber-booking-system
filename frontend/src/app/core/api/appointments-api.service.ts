@@ -19,4 +19,12 @@ export class AppointmentsApiService {
   cancel(id: string): Observable<Appointment> {
     return this.http.patch<Appointment>(`${environment.apiUrl}/appointments/${id}/cancel`, {});
   }
+
+  complete(id: string): Observable<Appointment> {
+    return this.http.patch<Appointment>(`${environment.apiUrl}/appointments/${id}/complete`, {});
+  }
+
+  noShow(id: string): Observable<Appointment> {
+    return this.http.patch<Appointment>(`${environment.apiUrl}/appointments/${id}/no-show`, {});
+  }
 }

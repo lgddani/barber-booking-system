@@ -1,0 +1,59 @@
+<main class="max-w-3xl mx-auto px-6 py-10">
+  <h1 class="font-display text-2xl font-semibold text-ink m-0 mb-1">Tu agenda</h1>
+  <p class="text-ink-soft text-sm mb-8">Las citas del día que elijas.</p>
+
+  <div class="flex items-center justify-between mb-6">
+    <button mat-icon-button (click)="shiftDate(-1)" aria-label="Día anterior">
+      <mat-icon>chevron_left</mat-icon>
+    </button>
+    <span class="font-medium text-ink">{{ formattedDate() }}</span>
+    <button mat-icon-button (click)="shiftDate(1)" aria-label="Día siguiente">
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+  </div>
+
+  @if (loading()) {
+    <div class="flex justify-center py-16">
+      <mat-spinner diameter="32" />
+    </div>
+  } @else if (appointmentsForDay().length === 0) {
+    <p class="text-center text-ink-soft py-10">No tienes citas ese día.</p>
+  } @else {
+    <div class="grid gap-3">
+      @for (appt of appointmentsForDay(); track appt.id) {
+        <div class="bg-surface border border-line rounded-2xl p-4 flex items-center justify-between gap-4">
+          <div>
+            <div class="font-medium text-ink">{{ formatTimeRange(appt.startAt, appt.endAt) }}</div>
+            <div class="text-sm text-ink-soft">
+              {{ serviceNames()[appt.serviceId] ?? 'Servicio' }} · {{ appt.customerName }}
+            </div>
+          </div>
+          <div class="flex flex-col items-end gap-2 shrink-0">
+            <span
+              class="text-xs font-medium px-3 py-1 rounded-full"
+              [class.bg-clay-soft]="appt.status === 'CONFIRMED' || appt.status === 'PENDING'"
+              [class.text-clay-ink]="appt.status === 'CONFIRMED' || appt.status === 'PENDING'"
+              [class.bg-muted-bg]="appt.status !== 'CONFIRMED' && appt.status !== 'PENDING'"
+              [class.text-muted-ink]="appt.status !== 'CONFIRMED' && appt.status !== 'PENDING'"
+            >
+              {{ statusLabel(appt.status) }}
+            </span>
+            @if (canAct(appt)) {
+              <div class="flex items-center gap-2">
+                <button mat-flat-button [disabled]="actingId() === appt.id" (click)="complete(appt)">
+                  Completar
+                </button>
+                <button mat-stroked-button [disabled]="actingId() === appt.id" (click)="noShow(appt)">
+                  No se presentó
+                </button>
+                <button mat-stroked-button [disabled]="actingId() === appt.id" (click)="cancel(appt)">
+                  Cancelar
+                </button>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
+</main>

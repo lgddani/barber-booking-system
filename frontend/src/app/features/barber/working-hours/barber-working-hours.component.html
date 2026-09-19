@@ -1,0 +1,67 @@
+<main class="max-w-2xl mx-auto px-6 py-10">
+  <h1 class="font-display text-2xl font-semibold text-ink m-0 mb-1">Tu horario semanal</h1>
+  <p class="text-ink-soft text-sm mb-8">
+    Los bloques que definas aquí son los que verán tus clientes al reservar.
+  </p>
+
+  @if (loading()) {
+    <div class="flex justify-center py-16">
+      <mat-spinner diameter="32" />
+    </div>
+  } @else {
+    <div class="grid gap-3 mb-6">
+      @for (day of days(); track day.dayOfWeek) {
+        <div class="bg-surface border border-line rounded-2xl p-4">
+          <div class="flex items-center justify-between mb-2">
+            <span class="font-medium text-ink">{{ day.label }}</span>
+            <button mat-button (click)="addBlock(day.dayOfWeek)">+ Agregar bloque</button>
+          </div>
+
+          @if (day.blocks.length === 0) {
+            <p class="text-sm text-ink-soft m-0">No trabaja este día.</p>
+          } @else {
+            <div class="grid gap-2">
+              @for (block of day.blocks; track $index; let i = $index) {
+                <div class="flex items-center gap-2">
+                  <input
+                    type="time"
+                    [value]="block.startTime"
+                    #startInput
+                    (change)="updateBlockTime(day.dayOfWeek, i, 'startTime', startInput.value)"
+                    class="border border-line rounded-lg px-2 py-1.5 text-sm text-ink bg-transparent"
+                  />
+                  <span class="text-ink-soft text-sm">a</span>
+                  <input
+                    type="time"
+                    [value]="block.endTime"
+                    #endInput
+                    (change)="updateBlockTime(day.dayOfWeek, i, 'endTime', endInput.value)"
+                    class="border border-line rounded-lg px-2 py-1.5 text-sm text-ink bg-transparent"
+                  />
+                  <button mat-icon-button (click)="removeBlock(day.dayOfWeek, i)" aria-label="Quitar bloque">
+                    <mat-icon>close</mat-icon>
+                  </button>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    @if (successMessage()) {
+      <p class="text-sm mb-4" style="color: var(--mat-sys-primary)">{{ successMessage() }}</p>
+    }
+    @if (errorMessage()) {
+      <p class="text-sm mb-4" style="color: var(--mat-sys-error)">{{ errorMessage() }}</p>
+    }
+
+    <button mat-flat-button [disabled]="saving()" (click)="save()">
+      @if (saving()) {
+        <mat-spinner diameter="20" />
+      } @else {
+        Guardar horario
+      }
+    </button>
+  }
+</main>

@@ -17,6 +17,7 @@ import com.barberbooking.api.security.UserPrincipal;
 import com.barberbooking.api.users.BarberProfileRepository;
 import com.barberbooking.api.users.Role;
 import com.barberbooking.api.users.User;
+import com.barberbooking.api.users.UserRepository;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
@@ -45,12 +46,15 @@ class AppointmentServiceTest {
     @Mock private AppointmentRepository appointmentRepository;
     @Mock private ServiceRepository serviceRepository;
     @Mock private BarberProfileRepository barberProfileRepository;
+    @Mock private UserRepository userRepository;
     @Mock private AvailabilityService availabilityService;
 
     private final Clock clock = Clock.fixed(Instant.parse("2026-01-01T00:00:00Z"), ZoneOffset.UTC);
 
     private AppointmentService appointmentService() {
-        return new AppointmentService(appointmentRepository, serviceRepository, barberProfileRepository, availabilityService, clock);
+        return new AppointmentService(
+            appointmentRepository, serviceRepository, barberProfileRepository, userRepository, availabilityService, clock
+        );
     }
 
     private AppointmentCreateRequest request() {

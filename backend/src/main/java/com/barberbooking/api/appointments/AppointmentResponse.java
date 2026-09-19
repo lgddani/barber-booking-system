@@ -7,6 +7,7 @@ import java.util.UUID;
 public record AppointmentResponse(
     UUID id,
     UUID customerId,
+    String customerName,
     UUID barberId,
     UUID serviceId,
     Instant startAt,
@@ -15,9 +16,9 @@ public record AppointmentResponse(
     BigDecimal priceAtBooking,
     String notes
 ) {
-    static AppointmentResponse from(Appointment a) {
+    static AppointmentResponse from(Appointment a, String customerName) {
         return new AppointmentResponse(
-            a.getId(), a.getCustomerId(), a.getBarberId(), a.getServiceId(),
+            a.getId(), a.getCustomerId(), customerName, a.getBarberId(), a.getServiceId(),
             a.getStartAt(), a.getEndAt(), a.getStatus(), a.getPriceAtBooking(), a.getNotes()
         );
     }

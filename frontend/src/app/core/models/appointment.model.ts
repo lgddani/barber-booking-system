@@ -3,6 +3,7 @@ export type AppointmentStatus = 'PENDING' | 'CONFIRMED' | 'COMPLETED' | 'CANCELL
 export interface Appointment {
   id: string;
   customerId: string;
+  customerName: string;
   barberId: string;
   serviceId: string;
   startAt: string;

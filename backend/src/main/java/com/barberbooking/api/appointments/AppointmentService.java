@@ -7,14 +7,18 @@ import com.barberbooking.api.common.SlotNotAvailableException;
 import com.barberbooking.api.security.UserPrincipal;
 import com.barberbooking.api.users.BarberProfileRepository;
 import com.barberbooking.api.users.Role;
+import com.barberbooking.api.users.User;
+import com.barberbooking.api.users.UserRepository;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.CannotAcquireLockException;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -37,6 +41,7 @@ public class AppointmentService {
     private final AppointmentRepository appointmentRepository;
     private final com.barberbooking.api.catalog.ServiceRepository serviceRepository;
     private final BarberProfileRepository barberProfileRepository;
+    private final UserRepository userRepository;
     private final AvailabilityService availabilityService;
     private final Clock clock;
 
@@ -102,7 +107,7 @@ public class AppointmentService {
             throw new SlotNotAvailableException();
         }
 
-        return AppointmentResponse.from(appointment);
+        return toResponse(appointment);
     }
 
     public List<AppointmentResponse> listForUser(UserPrincipal principal, AppointmentStatus status) {
@@ -117,13 +122,20 @@ public class AppointmentService {
                 ? appointmentRepository.findByCustomerIdAndStatusOrderByStartAtAsc(principal.getId(), status)
                 : appointmentRepository.findByCustomerIdOrderByStartAtAsc(principal.getId());
         };
-        return appointments.stream().map(AppointmentResponse::from).toList();
+        // Un solo viaje a la base para resolver todos los nombres de clientes
+        // de la lista, en vez de uno por cada cita (evita N+1 consultas).
+        Map<UUID, String> namesById = customerNamesOf(
+            appointments.stream().map(Appointment::getCustomerId).distinct().toList()
+        );
+        return appointments.stream()
+            .map(a -> AppointmentResponse.from(a, namesById.getOrDefault(a.getCustomerId(), "Cliente")))
+            .toList();
     }
 
     public AppointmentResponse getForUser(UUID id, UserPrincipal principal) {
         Appointment appointment = findOrThrow(id);
         requireOwnerOrAdmin(appointment, principal, true);
-        return AppointmentResponse.from(appointment);
+        return toResponse(appointment);
     }
 
     @Transactional
@@ -131,7 +143,7 @@ public class AppointmentService {
         Appointment appointment = findOrThrow(id);
         requireOwnerOrAdmin(appointment, principal, true);
         transition(appointment, AppointmentStatus.CANCELLED);
-        return AppointmentResponse.from(appointment);
+        return toResponse(appointment);
     }
 
     @Transactional
@@ -139,7 +151,7 @@ public class AppointmentService {
         Appointment appointment = findOrThrow(id);
         requireOwnerOrAdmin(appointment, principal, false);
         transition(appointment, AppointmentStatus.COMPLETED);
-        return AppointmentResponse.from(appointment);
+        return toResponse(appointment);
     }
 
     @Transactional
@@ -147,7 +159,7 @@ public class AppointmentService {
         Appointment appointment = findOrThrow(id);
         requireOwnerOrAdmin(appointment, principal, false);
         transition(appointment, AppointmentStatus.NO_SHOW);
-        return AppointmentResponse.from(appointment);
+        return toResponse(appointment);
     }
 
     // includeCustomer=true deja pasar también al cliente dueño (ver/cancelar
@@ -175,5 +187,18 @@ public class AppointmentService {
     private Appointment findOrThrow(UUID id) {
         return appointmentRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Cita no encontrada: " + id));
+    }
+
+    private AppointmentResponse toResponse(Appointment appointment) {
+        return AppointmentResponse.from(appointment, customerNameOf(appointment.getCustomerId()));
+    }
+
+    private String customerNameOf(UUID customerId) {
+        return userRepository.findById(customerId).map(User::getFullName).orElse("Cliente");
+    }
+
+    private Map<UUID, String> customerNamesOf(Collection<UUID> customerIds) {
+        return userRepository.findAllById(customerIds).stream()
+            .collect(Collectors.toMap(User::getId, User::getFullName));
     }
 }
