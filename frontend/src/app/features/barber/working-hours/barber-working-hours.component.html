@@ -1,8 +1,16 @@
 <main class="max-w-2xl mx-auto px-6 py-10">
-  <h1 class="font-display text-2xl font-semibold text-ink m-0 mb-1">Tu horario semanal</h1>
-  <p class="text-ink-soft text-sm mb-8">
-    Los bloques que definas aquí son los que verán tus clientes al reservar.
-  </p>
+  @if (viewingBarberName(); as name) {
+    <a routerLink="/admin/barberos" class="text-sm text-clay font-medium">← Volver a Barberos</a>
+    <h1 class="font-display text-2xl font-semibold text-ink mt-3 mb-1">Horario de {{ name }}</h1>
+    <p class="text-ink-soft text-sm mb-8">
+      Los bloques que definas aquí son los que verán los clientes al reservar con {{ name }}.
+    </p>
+  } @else {
+    <h1 class="font-display text-2xl font-semibold text-ink m-0 mb-1">Tu horario semanal</h1>
+    <p class="text-ink-soft text-sm mb-8">
+      Los bloques que definas aquí son los que verán tus clientes al reservar.
+    </p>
+  }
 
   @if (loading()) {
     <div class="flex justify-center py-16">

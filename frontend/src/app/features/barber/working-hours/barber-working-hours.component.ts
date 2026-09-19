@@ -1,4 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -30,28 +31,47 @@ const DAYS: { value: DayOfWeek; label: string }[] = [
 @Component({
   selector: 'app-barber-working-hours',
   standalone: true,
-  imports: [MatButtonModule, MatIconModule, MatProgressSpinnerModule],
+  imports: [RouterLink, MatButtonModule, MatIconModule, MatProgressSpinnerModule],
   templateUrl: './barber-working-hours.component.html'
 })
 export class BarberWorkingHoursComponent {
   private readonly auth = inject(AuthService);
   private readonly barbersApi = inject(BarbersApiService);
+  private readonly route = inject(ActivatedRoute);
+
+  private barberId = '';
 
   readonly loading = signal(true);
   readonly saving = signal(false);
   readonly days = signal<DayGroup[]>([]);
   readonly successMessage = signal<string | null>(null);
   readonly errorMessage = signal<string | null>(null);
+  // Cuando un admin edita el horario de OTRO barbero (en vez del propio) via
+  // /admin/barberos/:barberId/horarios, guardamos su nombre para el título.
+  // null significa "estoy viendo mi propio horario" (ruta /barbero/horarios).
+  readonly viewingBarberName = signal<string | null>(null);
 
   constructor() {
-    const barberId = this.auth.user()?.id;
-    if (!barberId) {
-      this.loading.set(false);
-      return;
-    }
-    this.barbersApi.getWorkingHours(barberId).subscribe((items) => {
-      this.days.set(this.buildDays(items));
-      this.loading.set(false);
+    // paramMap (no snapshot): si un admin navega del horario de un barbero
+    // directo al de otro, Angular reutiliza la misma instancia del
+    // componente para la misma ruta — sin esto, se quedaría mostrando los
+    // datos del primero.
+    this.route.paramMap.subscribe((params) => {
+      const routeBarberId = params.get('barberId');
+      const targetId = routeBarberId ?? this.auth.user()?.id;
+      if (!targetId) {
+        this.loading.set(false);
+        return;
+      }
+      this.barberId = targetId;
+
+      if (routeBarberId) {
+        this.barbersApi.get(routeBarberId).subscribe((barber) => this.viewingBarberName.set(barber.fullName));
+      } else {
+        this.viewingBarberName.set(null);
+      }
+
+      this.loadHours();
     });
   }
 
@@ -80,10 +100,6 @@ export class BarberWorkingHoursComponent {
   }
 
   save(): void {
-    const barberId = this.auth.user()?.id;
-    if (!barberId) {
-      return;
-    }
     const items: WorkingHoursItem[] = this.days().flatMap((d) =>
       d.blocks.map((b) => ({ dayOfWeek: d.dayOfWeek, startTime: b.startTime, endTime: b.endTime }))
     );
@@ -91,7 +107,7 @@ export class BarberWorkingHoursComponent {
     this.saving.set(true);
     this.successMessage.set(null);
     this.errorMessage.set(null);
-    this.barbersApi.replaceWorkingHours(barberId, items).subscribe({
+    this.barbersApi.replaceWorkingHours(this.barberId, items).subscribe({
       next: (updated) => {
         this.saving.set(false);
         this.days.set(this.buildDays(updated));
@@ -101,6 +117,14 @@ export class BarberWorkingHoursComponent {
         this.saving.set(false);
         this.errorMessage.set(err?.error?.message ?? 'No se pudo guardar el horario.');
       }
+    });
+  }
+
+  private loadHours(): void {
+    this.loading.set(true);
+    this.barbersApi.getWorkingHours(this.barberId).subscribe((items) => {
+      this.days.set(this.buildDays(items));
+      this.loading.set(false);
     });
   }
 

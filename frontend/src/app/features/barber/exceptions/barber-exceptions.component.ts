@@ -1,4 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -14,16 +15,22 @@ const TYPE_LABEL: Record<ExceptionType, string> = {
 @Component({
   selector: 'app-barber-exceptions',
   standalone: true,
-  imports: [MatButtonModule, MatIconModule, MatProgressSpinnerModule],
+  imports: [RouterLink, MatButtonModule, MatIconModule, MatProgressSpinnerModule],
   templateUrl: './barber-exceptions.component.html'
 })
 export class BarberExceptionsComponent {
   private readonly auth = inject(AuthService);
   private readonly barbersApi = inject(BarbersApiService);
+  private readonly route = inject(ActivatedRoute);
+
+  private barberId = '';
 
   readonly loading = signal(true);
   readonly exceptions = signal<ScheduleException[]>([]);
   readonly deletingId = signal<string | null>(null);
+  // Igual que en el horario semanal: no-null cuando un admin está viendo el
+  // de otro barbero en vez del propio.
+  readonly viewingBarberName = signal<string | null>(null);
 
   readonly newDate = signal(this.tomorrowIso());
   readonly newType = signal<ExceptionType>('CLOSED');
@@ -36,17 +43,28 @@ export class BarberExceptionsComponent {
   readonly isCustomHours = computed(() => this.newType() === 'CUSTOM_HOURS');
 
   constructor() {
-    this.reload();
+    this.route.paramMap.subscribe((params) => {
+      const routeBarberId = params.get('barberId');
+      const targetId = routeBarberId ?? this.auth.user()?.id;
+      if (!targetId) {
+        this.loading.set(false);
+        return;
+      }
+      this.barberId = targetId;
+
+      if (routeBarberId) {
+        this.barbersApi.get(routeBarberId).subscribe((barber) => this.viewingBarberName.set(barber.fullName));
+      } else {
+        this.viewingBarberName.set(null);
+      }
+
+      this.reload();
+    });
   }
 
   reload(): void {
-    const barberId = this.auth.user()?.id;
-    if (!barberId) {
-      this.loading.set(false);
-      return;
-    }
     this.loading.set(true);
-    this.barbersApi.listExceptions(barberId, this.todayIso()).subscribe((exceptions) => {
+    this.barbersApi.listExceptions(this.barberId, this.todayIso()).subscribe((exceptions) => {
       this.exceptions.set(exceptions);
       this.loading.set(false);
     });
@@ -61,14 +79,10 @@ export class BarberExceptionsComponent {
   }
 
   create(): void {
-    const barberId = this.auth.user()?.id;
-    if (!barberId) {
-      return;
-    }
     this.submitting.set(true);
     this.errorMessage.set(null);
     this.barbersApi
-      .createException(barberId, {
+      .createException(this.barberId, {
         date: this.newDate(),
         type: this.newType(),
         ...(this.isCustomHours() ? { startTime: this.newStart(), endTime: this.newEnd() } : {})
@@ -87,12 +101,8 @@ export class BarberExceptionsComponent {
   }
 
   delete(exception: ScheduleException): void {
-    const barberId = this.auth.user()?.id;
-    if (!barberId) {
-      return;
-    }
     this.deletingId.set(exception.id);
-    this.barbersApi.deleteException(barberId, exception.id).subscribe({
+    this.barbersApi.deleteException(this.barberId, exception.id).subscribe({
       next: () => {
         this.deletingId.set(null);
         this.reload();

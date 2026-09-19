@@ -76,6 +76,20 @@ export const routes: Routes = [
           import('./features/admin/barbers/admin-barbers.component').then((m) => m.AdminBarbersComponent)
       },
       {
+        path: 'barberos/:barberId/horarios',
+        loadComponent: () =>
+          import('./features/barber/working-hours/barber-working-hours.component').then(
+            (m) => m.BarberWorkingHoursComponent
+          )
+      },
+      {
+        path: 'barberos/:barberId/bloqueos',
+        loadComponent: () =>
+          import('./features/barber/exceptions/barber-exceptions.component').then(
+            (m) => m.BarberExceptionsComponent
+          )
+      },
+      {
         path: 'citas',
         loadComponent: () =>
           import('./features/admin/appointments/admin-appointments.component').then(

@@ -1,4 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { BarbersApiService } from '../../../core/api/barbers-api.service';
@@ -7,7 +8,7 @@ import { Barber } from '../../../core/models/barber.model';
 @Component({
   selector: 'app-admin-barbers',
   standalone: true,
-  imports: [MatButtonModule, MatProgressSpinnerModule],
+  imports: [RouterLink, MatButtonModule, MatProgressSpinnerModule],
   templateUrl: './admin-barbers.component.html'
 })
 export class AdminBarbersComponent {

@@ -1,24 +1,18 @@
 import { Component, inject, signal } from '@angular/core';
+import { NgClass } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AuthService } from '../../../core/auth/auth.service';
 import { homeRouteForRole } from '../../../core/auth/role-routes';
 
+type RegisterField = 'fullName' | 'email' | 'password';
+
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [
-    ReactiveFormsModule,
-    RouterLink,
-    MatButtonModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatProgressSpinnerModule
-  ],
+  imports: [NgClass, ReactiveFormsModule, RouterLink, MatButtonModule, MatProgressSpinnerModule],
   templateUrl: './register.component.html'
 })
 export class RegisterComponent {
@@ -35,6 +29,11 @@ export class RegisterComponent {
     phone: [''],
     password: ['', [Validators.required, Validators.minLength(8)]]
   });
+
+  showError(field: RegisterField): boolean {
+    const control = this.form.controls[field];
+    return control.invalid && control.touched;
+  }
 
   submit(): void {
     if (this.form.invalid) {

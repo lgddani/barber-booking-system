@@ -84,7 +84,7 @@
               <div class="text-sm text-ink-soft">{{ barber.bio }}</div>
             }
           </div>
-          <div class="flex items-center gap-2 shrink-0">
+          <div class="flex items-center flex-wrap justify-end gap-2 shrink-0">
             <span
               class="text-xs font-medium px-3 py-1 rounded-full"
               [class.bg-clay-soft]="barber.active"
@@ -95,6 +95,8 @@
               {{ barber.active ? 'Activo' : 'Inactivo' }}
             </span>
             <button mat-stroked-button (click)="startEdit(barber)">Editar</button>
+            <a [routerLink]="['/admin/barberos', barber.id, 'horarios']" mat-stroked-button>Horario</a>
+            <a [routerLink]="['/admin/barberos', barber.id, 'bloqueos']" mat-stroked-button>Bloqueos</a>
             <button mat-stroked-button [disabled]="togglingId() === barber.id" (click)="toggleActive(barber)">
               {{ barber.active ? 'Desactivar' : 'Activar' }}
             </button>

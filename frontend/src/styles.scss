@@ -45,6 +45,10 @@ html {
   --color-clay-soft: #efd9c4;
   --color-muted-bg: #eae3d6;
   --color-muted-ink: #a79c8c;
+  // Referencia directa al error que ya genera mat.theme(), para tener
+  // utilidades de Tailwind (text-error, border-error...) sin duplicar el
+  // color a mano y sin desincronizarse si el tema cambia.
+  --color-error: var(--mat-sys-error);
 
   --font-display: "Fraunces", serif;
   --font-sans: "Source Sans 3", system-ui, sans-serif;

@@ -1,8 +1,14 @@
 <main class="max-w-2xl mx-auto px-6 py-10">
-  <h1 class="font-display text-2xl font-semibold text-ink m-0 mb-1">Bloqueos y días especiales</h1>
-  <p class="text-ink-soft text-sm mb-8">
-    Cierra un día puntual (vacaciones, feriado) o dale un horario distinto al de siempre.
-  </p>
+  @if (viewingBarberName(); as name) {
+    <a routerLink="/admin/barberos" class="text-sm text-clay font-medium">← Volver a Barberos</a>
+    <h1 class="font-display text-2xl font-semibold text-ink mt-3 mb-1">Bloqueos de {{ name }}</h1>
+    <p class="text-ink-soft text-sm mb-8">Cierra un día puntual o dale un horario distinto al de siempre.</p>
+  } @else {
+    <h1 class="font-display text-2xl font-semibold text-ink m-0 mb-1">Bloqueos y días especiales</h1>
+    <p class="text-ink-soft text-sm mb-8">
+      Cierra un día puntual (vacaciones, feriado) o dale un horario distinto al de siempre.
+    </p>
+  }
 
   <div class="bg-surface border border-line rounded-2xl p-5 mb-6">
     <h2 class="font-display text-base font-semibold text-ink m-0 mb-3">Agregar bloqueo</h2>
